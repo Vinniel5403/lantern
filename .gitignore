@@ -1,0 +1,29 @@
+# Python / uv
+backend/.venv/
+backend/__pycache__/
+backend/.pytest_cache/
+*.py[cod]
+
+# Local configuration and credentials
+.env
+.env.*
+!.env.example
+
+# Audio and local runtime artifacts
+*.wav
+*.pcm
+*.log
+
+# PlatformIO
+.pio/
+firmware/.pio/
+firmware/.cache/
+firmware/.clangd/
+firmware/.pioenvs/
+firmware/.sconsign.dblite
+
+# Editors / operating systems
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
