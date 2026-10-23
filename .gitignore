@@ -13,6 +13,7 @@ backend/.pytest_cache/
 *.wav
 *.pcm
 *.log
+backend/runtime_audio/
 
 # PlatformIO
 .pio/
