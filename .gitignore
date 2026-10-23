@@ -16,11 +16,15 @@ backend/.pytest_cache/
 
 # PlatformIO
 .pio/
+.platformio/
 firmware/.pio/
 firmware/.cache/
 firmware/.clangd/
 firmware/.pioenvs/
 firmware/.sconsign.dblite
+Embedded System/include/secrets.h
+Embedded System/.pio/
+Embedded System/pio-error.txt
 
 # Editors / operating systems
 .vscode/
