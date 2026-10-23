@@ -98,7 +98,7 @@ class TyphoonSelfHostedProvider:
     async def transcribe(
         self, audio: bytes, *, filename: str, content_type: str
     ) -> Transcript:
-        raise RuntimeError("Typhoon self-host provider is not implemented in Phase 0")
+        raise RuntimeError("Typhoon self-host provider is reserved for a later phase")
 
 
 def create_asr_provider(settings: Settings) -> ASRProvider:

@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     app_env: str = "development"
     asr_provider: str = "mock"
     max_audio_bytes: int = Field(default=1_000_000, gt=0)
+    save_uploaded_audio: bool = False
+    audio_save_dir: str = "runtime_audio"
     wake_phrase: str = "lantern"
     typhoon_api_key: str | None = None
     typhoon_api_base_url: str = "https://api.opentyphoon.ai/v1"
