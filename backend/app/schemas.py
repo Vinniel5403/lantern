@@ -19,4 +19,8 @@ class UtteranceResponse(BaseModel):
 
     transcript: Transcript
     wake_word_detected: bool
+    matched_wake_word: str | None = None
+    duplicate_segment: bool = False
+    replayed_request: bool = False
+    request_id: str | None = None
     intent: IntentDecision
