@@ -26,12 +26,17 @@
 #define LANTERN_BACKEND_PATH "/v1/utterances/transcribe"
 #endif
 
+#ifndef LANTERN_MAX_RECORDING_MS
+#define LANTERN_MAX_RECORDING_MS 4000
+#endif
+
 namespace lantern {
 namespace pins {
 constexpr gpio_num_t kI2sBclk = GPIO_NUM_26;
 constexpr gpio_num_t kI2sWs = GPIO_NUM_25;
 constexpr gpio_num_t kI2sDataIn = GPIO_NUM_33;
-constexpr uint8_t kDemoLed = 2;
+// LED anode connects through a resistor to GPIO17; cathode connects to GND.
+constexpr uint8_t kDemoLed = 17;
 }  // namespace pins
 
 constexpr uint32_t kAudioSampleRateHz = 16000;
@@ -40,10 +45,11 @@ constexpr size_t kAudioFrameSamples =
     kAudioSampleRateHz * kAudioFrameMs / 1000;
 constexpr uint16_t kPreRollMs = 300;
 constexpr size_t kPreRollSamples = kAudioSampleRateHz * kPreRollMs / 1000;
-constexpr uint16_t kSilenceTimeoutMs = 1000;
+constexpr uint16_t kSilenceTimeoutMs = 500;
 constexpr uint16_t kMinimumSpeechMs = 200;
-// Keep the complete WAV in internal DRAM; ESP32 DevKit V1 does not guarantee PSRAM.
-constexpr uint16_t kMaxRecordingMs = 2000;
+// Audio is staged in LittleFS; only the 300 ms pre-roll remains in DRAM.
+constexpr uint16_t kMaxRecordingMs =
+    static_cast<uint16_t>(LANTERN_MAX_RECORDING_MS);
 constexpr size_t kMaxRecordingSamples =
     kAudioSampleRateHz * kMaxRecordingMs / 1000;
 constexpr uint16_t kVadMeanAbsoluteThreshold = 700;
@@ -53,4 +59,13 @@ constexpr uint16_t kNoiseGateThreshold = 120;
 constexpr int32_t kHighPassFeedbackNumerator = 995;
 constexpr int32_t kHighPassFeedbackDenominator = 1000;
 constexpr uint32_t kSignalTelemetryIntervalMs = 1000;
+constexpr uint32_t kWifiConnectTimeoutMs = 8000;
+constexpr uint8_t kWifiMaxAttempts = 4;
+constexpr uint32_t kWifiBackoffBaseMs = 250;
+constexpr uint32_t kWifiBackoffMaxMs = 4000;
+// Typhoon provider timeout is 30 seconds; leave margin for HTTP transport.
+constexpr uint32_t kHttpTimeoutMs = 35000;
+constexpr uint8_t kUploadMaxAttempts = 3;
+constexpr uint32_t kUploadBackoffBaseMs = 500;
+constexpr uint32_t kUploadBackoffMaxMs = 4000;
 }  // namespace lantern
