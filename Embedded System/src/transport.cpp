@@ -1,5 +1,6 @@
 #include "transport.h"
 
+#include <LittleFS.h>
 #include <WiFi.h>
 
 #include <string.h>
@@ -7,9 +8,8 @@
 #include "lantern_config.h"
 
 namespace {
-constexpr uint32_t kWifiTimeoutMs = 10000;
-constexpr uint32_t kHttpTimeoutMs = 5000;
 constexpr size_t kWriteChunkBytes = 512;
+constexpr size_t kMaxResponseBytes = 4096;
 const char* kBoundary = "----LanternAudioBoundary";
 
 bool writeBytes(WiFiClient& client, const uint8_t* data, size_t length) {
@@ -57,11 +57,22 @@ void makeWavHeader(uint8_t* header, size_t pcm_bytes) {
   memcpy(header + 36, "data", 4);
   putUint32LE(header + 40, pcm_bytes);
 }
+
+uint32_t boundedBackoff(uint32_t base, uint32_t maximum, uint8_t retry_index) {
+  uint32_t delay_ms = base;
+  for (uint8_t index = 0; index < retry_index && delay_ms < maximum; ++index) {
+    delay_ms = min(maximum, delay_ms * 2);
+  }
+  return delay_ms;
+}
 }  // namespace
 
 void BackendTransport::begin() {
   WiFi.mode(WIFI_STA);
-  ensureWiFi();
+  WiFi.setAutoReconnect(true);
+  if (!ensureWiFi()) {
+    Serial.println("Wi-Fi startup connection failed; upload will retry later");
+  }
 }
 
 bool BackendTransport::ensureWiFi() {
@@ -71,40 +82,70 @@ bool BackendTransport::ensureWiFi() {
     return false;
   }
 
-  Serial.printf("Connecting to Wi-Fi: %s\n", LANTERN_WIFI_SSID);
-  WiFi.begin(LANTERN_WIFI_SSID, LANTERN_WIFI_PASSWORD);
-  const uint32_t started_at = millis();
-  while (WiFi.status() != WL_CONNECTED && millis() - started_at < kWifiTimeoutMs) {
-    delay(250);
-    Serial.print('.');
+  for (uint8_t attempt = 0; attempt < lantern::kWifiMaxAttempts; ++attempt) {
+    Serial.printf(
+        "Wi-Fi connect attempt %u/%u: %s\n",
+        attempt + 1,
+        lantern::kWifiMaxAttempts,
+        LANTERN_WIFI_SSID);
+    WiFi.begin(LANTERN_WIFI_SSID, LANTERN_WIFI_PASSWORD);
+    const uint32_t started_at = millis();
+    while (WiFi.status() != WL_CONNECTED &&
+           millis() - started_at < lantern::kWifiConnectTimeoutMs) {
+      delay(250);
+      Serial.print('.');
+    }
+    Serial.println();
+    if (WiFi.status() == WL_CONNECTED) {
+      Serial.print("Wi-Fi connected, IP: ");
+      Serial.println(WiFi.localIP());
+      return true;
+    }
+
+    Serial.printf("Wi-Fi attempt %u timed out\n", attempt + 1);
+    if (attempt + 1 < lantern::kWifiMaxAttempts) {
+      const uint32_t backoff_ms = boundedBackoff(
+          lantern::kWifiBackoffBaseMs,
+          lantern::kWifiBackoffMaxMs,
+          attempt);
+      Serial.printf("Wi-Fi reconnect backoff: %lu ms\n",
+                    static_cast<unsigned long>(backoff_ms));
+      delay(backoff_ms);
+    }
   }
-  Serial.println();
-  if (WiFi.status() != WL_CONNECTED) {
-    Serial.println("Wi-Fi connection timed out; will retry before upload");
-    return false;
-  }
-  Serial.print("Wi-Fi connected, IP: ");
-  Serial.println(WiFi.localIP());
-  return true;
+
+  Serial.println("Wi-Fi reconnect exhausted; audio upload deferred");
+  return false;
 }
 
-bool BackendTransport::sendWav(
-    const int16_t* samples,
+String BackendTransport::nextRequestId() {
+  static uint32_t sequence = 0;
+  ++sequence;
+  return String("esp32-") + String(millis(), HEX) + "-" + String(sequence, HEX);
+}
+
+BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
+    const char* pcm_path,
     size_t sample_count,
+    const String& request_id,
     String* response) {
-  if (samples == nullptr || sample_count == 0 || response == nullptr) {
-    return false;
+  const size_t pcm_bytes = sample_count * sizeof(int16_t);
+  File pcm_file = LittleFS.open(pcm_path, FILE_READ);
+  if (!pcm_file || pcm_file.size() != pcm_bytes) {
+    Serial.println("Audio staging file missing or has invalid size");
+    return AttemptResult::kPermanentFailure;
   }
-  if (!ensureWiFi()) return false;
 
   WiFiClient client;
-  client.setTimeout(kHttpTimeoutMs);
-  if (!client.connect(LANTERN_BACKEND_HOST, LANTERN_BACKEND_PORT)) {
-    Serial.println("Backend connection failed");
-    return false;
+  client.setTimeout(lantern::kHttpTimeoutMs);
+  if (!client.connect(
+          LANTERN_BACKEND_HOST,
+          LANTERN_BACKEND_PORT,
+          static_cast<int32_t>(lantern::kHttpTimeoutMs))) {
+    Serial.println("Backend TCP connection failed");
+    return AttemptResult::kRetryableFailure;
   }
 
-  const size_t pcm_bytes = sample_count * sizeof(int16_t);
   const size_t wav_bytes = 44 + pcm_bytes;
   const String prefix = String("--") + kBoundary +
       "\r\nContent-Disposition: form-data; name=\"audio\"; filename=\"utterance.wav\"\r\n"
@@ -114,6 +155,7 @@ bool BackendTransport::sendWav(
 
   client.print(String("POST ") + LANTERN_BACKEND_PATH + " HTTP/1.1\r\n");
   client.print(String("Host: ") + LANTERN_BACKEND_HOST + "\r\n");
+  client.print(String("X-Lantern-Request-ID: ") + request_id + "\r\n");
   client.print(String("Content-Type: multipart/form-data; boundary=") +
                kBoundary + "\r\n");
   client.print(String("Content-Length: ") + content_length + "\r\n");
@@ -121,24 +163,51 @@ bool BackendTransport::sendWav(
 
   uint8_t wav_header[44];
   makeWavHeader(wav_header, pcm_bytes);
-  if (!writeString(client, prefix) || !writeBytes(client, wav_header, sizeof(wav_header)) ||
-      !writeBytes(client, reinterpret_cast<const uint8_t*>(samples), pcm_bytes) ||
-      !writeString(client, suffix)) {
+  if (!writeString(client, prefix) ||
+      !writeBytes(client, wav_header, sizeof(wav_header))) {
     Serial.println("Audio upload write failed");
     client.stop();
-    return false;
+    pcm_file.close();
+    return AttemptResult::kRetryableFailure;
+  }
+
+  uint8_t chunk[kWriteChunkBytes];
+  size_t remaining = pcm_bytes;
+  while (remaining > 0) {
+    const size_t requested = min(remaining, sizeof(chunk));
+    const size_t read = pcm_file.read(chunk, requested);
+    if (read == 0 || !writeBytes(client, chunk, read)) {
+      Serial.println("Audio staging read/upload failed");
+      client.stop();
+      pcm_file.close();
+      return AttemptResult::kRetryableFailure;
+    }
+    remaining -= read;
+  }
+  pcm_file.close();
+  if (!writeString(client, suffix)) {
+    Serial.println("Audio upload suffix write failed");
+    client.stop();
+    return AttemptResult::kRetryableFailure;
   }
 
   const String status_line = client.readStringUntil('\n');
+  if (status_line.length() < 12 || !status_line.startsWith("HTTP/")) {
+    Serial.println("Backend response timeout or malformed status line");
+    client.stop();
+    return AttemptResult::kRetryableFailure;
+  }
   const int status_code = status_line.substring(9, 12).toInt();
   while (client.connected()) {
     const String line = client.readStringUntil('\n');
     if (line == "\r" || line.length() == 0) break;
   }
+
   *response = "";
   const uint32_t response_started_at = millis();
   while ((client.connected() || client.available()) &&
-         millis() - response_started_at < kHttpTimeoutMs && response->length() < 2048) {
+         millis() - response_started_at < lantern::kHttpTimeoutMs &&
+         response->length() < kMaxResponseBytes) {
     if (client.available()) {
       *response += static_cast<char>(client.read());
     } else {
@@ -146,6 +215,66 @@ bool BackendTransport::sendWav(
     }
   }
   client.stop();
-  Serial.printf("Backend HTTP status: %d\n", status_code);
-  return status_code >= 200 && status_code < 300;
+  Serial.printf("Backend HTTP status: %d request_id=%s\n",
+                status_code, request_id.c_str());
+
+  if (status_code >= 200 && status_code < 300 && response->length() > 0) {
+    return AttemptResult::kSuccess;
+  }
+  if (status_code >= 400 && status_code < 500) {
+    return AttemptResult::kPermanentFailure;
+  }
+  return AttemptResult::kRetryableFailure;
+}
+
+bool BackendTransport::sendWavFile(
+    const char* pcm_path,
+    size_t sample_count,
+    String* response) {
+  if (pcm_path == nullptr || sample_count == 0 || response == nullptr) {
+    Serial.println("Audio upload rejected: invalid buffer");
+    return false;
+  }
+
+  const String request_id = nextRequestId();
+  for (uint8_t attempt = 0; attempt < lantern::kUploadMaxAttempts; ++attempt) {
+    Serial.printf(
+        "Audio upload attempt %u/%u request_id=%s\n",
+        attempt + 1,
+        lantern::kUploadMaxAttempts,
+        request_id.c_str());
+    if (!ensureWiFi()) {
+      if (attempt + 1 < lantern::kUploadMaxAttempts) {
+        const uint32_t backoff_ms = boundedBackoff(
+            lantern::kUploadBackoffBaseMs,
+            lantern::kUploadBackoffMaxMs,
+            attempt);
+        Serial.printf("Upload retry backoff: %lu ms\n",
+                      static_cast<unsigned long>(backoff_ms));
+        delay(backoff_ms);
+      }
+      continue;
+    }
+
+    const AttemptResult result =
+        sendWavAttempt(pcm_path, sample_count, request_id, response);
+    if (result == AttemptResult::kSuccess) return true;
+    if (result == AttemptResult::kPermanentFailure) {
+      Serial.println("Audio upload rejected by backend; no retry");
+      return false;
+    }
+    if (attempt + 1 < lantern::kUploadMaxAttempts) {
+      const uint32_t backoff_ms = boundedBackoff(
+          lantern::kUploadBackoffBaseMs,
+          lantern::kUploadBackoffMaxMs,
+          attempt);
+      Serial.printf("Audio upload retry backoff: %lu ms\n",
+                    static_cast<unsigned long>(backoff_ms));
+      delay(backoff_ms);
+    }
+  }
+
+  Serial.printf("Audio upload failed after %u attempts; utterance discarded\n",
+                lantern::kUploadMaxAttempts);
+  return false;
 }

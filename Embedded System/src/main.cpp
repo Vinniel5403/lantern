@@ -58,20 +58,24 @@ void printSignalTelemetry(
 
 void setup() {
   Serial.begin(115200);
-  pinMode(lantern::pins::kDemoLed, OUTPUT);
-  digitalWrite(lantern::pins::kDemoLed, LOW);
+  Serial.setTimeout(25);
   audio_capture.begin();
   audio_filter.reset();
+  segmenter.begin();
   transport.begin();
   command_handler.begin();
   segmenter.reset();
-  Serial.println("Lantern Phase 2 firmware ready: hands-free I2S capture");
+  Serial.println("Lantern Phase 3.5 firmware ready: hands-free I2S capture");
   Serial.println("Audio is sent as bounded WAV utterances; no push-to-talk input.");
   Serial.println("INMP441 telemetry: mean/peak/min/max every 1 second");
   Serial.println("Audio filter: high-pass plus noise gate");
 }
 
 void loop() {
+  if (Serial.available()) {
+    command_handler.handleSerialCommand(Serial.readStringUntil('\n'));
+  }
+
   size_t samples_read = 0;
   if (!audio_capture.readFrame(
           audio_frame,
@@ -91,7 +95,8 @@ void loop() {
   if (!utterance_complete) return;
 
   String response;
-  if (!transport.sendWav(segmenter.samples(), segmenter.sampleCount(), &response)) {
+  if (!transport.sendWavFile(
+          segmenter.pcmPath(), segmenter.sampleCount(), &response)) {
     Serial.println("Utterance upload failed; continuing to listen");
   } else {
     command_handler.handleBackendResponse(response);
