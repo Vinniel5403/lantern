@@ -4,6 +4,7 @@
 #include "audio_filter.h"
 #include "command_handler.h"
 #include "lantern_config.h"
+#include "relay_controller.h"
 #include "transport.h"
 #include "utterance_segmenter.h"
 #include "vad.h"
@@ -13,8 +14,10 @@ AudioFilter audio_filter;
 VoiceActivityGate vad;
 BackendTransport transport;
 CommandHandler command_handler;
+RelayController relay_controller;
 UtteranceSegmenter segmenter;
 int16_t audio_frame[lantern::kAudioFrameSamples] = {};
+uint32_t utterance_started_ms = 0;
 
 void printSignalTelemetry(
     const int16_t* samples,
@@ -59,11 +62,12 @@ void printSignalTelemetry(
 void setup() {
   Serial.begin(115200);
   Serial.setTimeout(25);
+  // Initialize low-voltage outputs before starting I2S or blocking on Wi-Fi.
+  command_handler.begin(&relay_controller);
   audio_capture.begin();
   audio_filter.reset();
   segmenter.begin();
   transport.begin();
-  command_handler.begin();
   segmenter.reset();
   Serial.println("Lantern Phase 3.5 firmware ready: hands-free I2S capture");
   Serial.println("Audio is sent as bounded WAV utterances; no push-to-talk input.");
@@ -88,18 +92,46 @@ void loop() {
 
   audio_filter.process(audio_frame, samples_read);
   const bool speech = vad.speechDetected(audio_frame, samples_read);
+  const bool was_recording = segmenter.active();
   const bool utterance_complete =
       segmenter.processFrame(audio_frame, samples_read, speech);
+  const bool is_recording = segmenter.active();
+  if (!was_recording && is_recording) {
+    utterance_started_ms = millis();
+    Serial.printf(
+        "RECORDING START pre_roll_ms=%u\n",
+        lantern::kPreRollMs);
+  } else if (was_recording && !is_recording) {
+    Serial.printf(
+        "RECORDING STOP reason=%s duration_ms=%u vad_endpoint_ms=%u "
+        "samples=%lu result=%s\n",
+        segmenter.completionReasonName(),
+        segmenter.recordingMs(),
+        segmenter.silenceMs(),
+        static_cast<unsigned long>(segmenter.sampleCount()),
+        utterance_complete ? "ready_for_upload" : "discarded");
+  }
   printSignalTelemetry(
-      audio_frame, samples_read, speech, segmenter.active());
+      audio_frame, samples_read, speech, is_recording);
   if (!utterance_complete) return;
 
+  const uint32_t upload_started_ms = millis();
   String response;
-  if (!transport.sendWavFile(
-          segmenter.pcmPath(), segmenter.sampleCount(), &response)) {
+  const bool upload_ok = transport.sendWavFile(
+      segmenter.pcmPath(), segmenter.sampleCount(), &response);
+  Serial.printf(
+      "PIPELINE upload_ms=%lu total_to_response_ms=%lu result=%s\n",
+      static_cast<unsigned long>(millis() - upload_started_ms),
+      static_cast<unsigned long>(millis() - utterance_started_ms),
+      upload_ok ? "ok" : "failed");
+  if (!upload_ok) {
     Serial.println("Utterance upload failed; continuing to listen");
   } else {
     command_handler.handleBackendResponse(response);
+    Serial.printf(
+        "PIPELINE total_to_command_end_ms=%lu\n",
+        static_cast<unsigned long>(millis() - utterance_started_ms));
   }
+  utterance_started_ms = 0;
   segmenter.reset();
 }

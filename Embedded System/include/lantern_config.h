@@ -30,6 +30,10 @@
 #define LANTERN_MAX_RECORDING_MS 4000
 #endif
 
+#ifndef RELAY_ACTIVE_LOW
+#define RELAY_ACTIVE_LOW 1
+#endif
+
 namespace lantern {
 namespace pins {
 constexpr gpio_num_t kI2sBclk = GPIO_NUM_26;
@@ -37,7 +41,12 @@ constexpr gpio_num_t kI2sWs = GPIO_NUM_25;
 constexpr gpio_num_t kI2sDataIn = GPIO_NUM_33;
 // LED anode connects through a resistor to GPIO17; cathode connects to GND.
 constexpr uint8_t kDemoLed = 17;
+// Relay module signal only; never connect the relay coil to this GPIO.
+// GPIO23 is reserved for the verified low-voltage relay input.
+constexpr uint8_t kRelayControl = 23;
 }  // namespace pins
+
+constexpr bool kRelayActiveLow = RELAY_ACTIVE_LOW != 0;
 
 constexpr uint32_t kAudioSampleRateHz = 16000;
 constexpr uint16_t kAudioFrameMs = 20;
@@ -68,4 +77,5 @@ constexpr uint32_t kHttpTimeoutMs = 35000;
 constexpr uint8_t kUploadMaxAttempts = 3;
 constexpr uint32_t kUploadBackoffBaseMs = 500;
 constexpr uint32_t kUploadBackoffMaxMs = 4000;
+constexpr uint8_t kExecutedRequestCacheSize = 8;
 }  // namespace lantern
