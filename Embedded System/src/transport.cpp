@@ -76,6 +76,29 @@ void BackendTransport::begin() {
   }
 }
 
+const char* BackendTransport::failureReasonName(FailureReason reason) {
+  switch (reason) {
+    case FailureReason::kNone:
+      return "none";
+    case FailureReason::kInvalidAudio:
+      return "invalid_audio";
+    case FailureReason::kWifiDisconnected:
+      return "wifi_disconnected";
+    case FailureReason::kNetworkError:
+      return "network_error";
+    case FailureReason::kHttpTimeout:
+      return "http_timeout";
+    case FailureReason::kBackendRejected:
+      return "backend_rejected";
+    case FailureReason::kAsrFailure:
+      return "asr_failure";
+    case FailureReason::kBackendError:
+      return "backend_error";
+    default:
+      return "unknown";
+  }
+}
+
 bool BackendTransport::ensureWiFi() {
   if (WiFi.status() == WL_CONNECTED) return true;
   if (strlen(LANTERN_WIFI_SSID) == 0) {
@@ -137,6 +160,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
   File pcm_file = LittleFS.open(pcm_path, FILE_READ);
   if (!pcm_file || pcm_file.size() != pcm_bytes) {
     Serial.println("Audio staging file missing or has invalid size");
+    last_failure_reason_ = FailureReason::kInvalidAudio;
     return AttemptResult::kPermanentFailure;
   }
 
@@ -147,6 +171,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
           LANTERN_BACKEND_PORT,
           static_cast<int32_t>(lantern::kHttpTimeoutMs))) {
     Serial.println("Backend TCP connection failed");
+    last_failure_reason_ = FailureReason::kNetworkError;
     return AttemptResult::kRetryableFailure;
   }
 
@@ -170,6 +195,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
   if (!writeString(client, prefix) ||
       !writeBytes(client, wav_header, sizeof(wav_header))) {
     Serial.println("Audio upload write failed");
+    last_failure_reason_ = FailureReason::kNetworkError;
     client.stop();
     pcm_file.close();
     return AttemptResult::kRetryableFailure;
@@ -182,6 +208,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
     const size_t read = pcm_file.read(chunk, requested);
     if (read == 0 || !writeBytes(client, chunk, read)) {
       Serial.println("Audio staging read/upload failed");
+      last_failure_reason_ = FailureReason::kNetworkError;
       client.stop();
       pcm_file.close();
       return AttemptResult::kRetryableFailure;
@@ -191,6 +218,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
   pcm_file.close();
   if (!writeString(client, suffix)) {
     Serial.println("Audio upload suffix write failed");
+    last_failure_reason_ = FailureReason::kNetworkError;
     client.stop();
     return AttemptResult::kRetryableFailure;
   }
@@ -198,6 +226,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
   const String status_line = client.readStringUntil('\n');
   if (status_line.length() < 12 || !status_line.startsWith("HTTP/")) {
     Serial.println("Backend response timeout or malformed status line");
+    last_failure_reason_ = FailureReason::kHttpTimeout;
     client.stop();
     return AttemptResult::kRetryableFailure;
   }
@@ -226,11 +255,16 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
                 static_cast<unsigned long>(millis() - attempt_started_ms));
 
   if (status_code >= 200 && status_code < 300 && response->length() > 0) {
+    last_failure_reason_ = FailureReason::kNone;
     return AttemptResult::kSuccess;
   }
   if (status_code >= 400 && status_code < 500) {
+    last_failure_reason_ = FailureReason::kBackendRejected;
     return AttemptResult::kPermanentFailure;
   }
+  last_failure_reason_ = status_code == 503
+                             ? FailureReason::kAsrFailure
+                             : FailureReason::kBackendError;
   return AttemptResult::kRetryableFailure;
 }
 
@@ -240,15 +274,18 @@ bool BackendTransport::sendWavFile(
     String* response) {
   if (pcm_path == nullptr || sample_count == 0 || response == nullptr) {
     Serial.println("Audio upload rejected: invalid buffer");
+    last_failure_reason_ = FailureReason::kInvalidAudio;
     return false;
   }
   if (sample_count > lantern::kMaxRecordingSamples) {
     Serial.println("Audio upload rejected: sample count exceeds configured bound");
+    last_failure_reason_ = FailureReason::kInvalidAudio;
     return false;
   }
 
   const String request_id = nextRequestId();
   const uint32_t upload_started_ms = millis();
+  last_failure_reason_ = FailureReason::kNone;
   *response = "";
   for (uint8_t attempt = 0; attempt < lantern::kUploadMaxAttempts; ++attempt) {
     Serial.printf(
@@ -257,6 +294,7 @@ bool BackendTransport::sendWavFile(
         lantern::kUploadMaxAttempts,
         request_id.c_str());
     if (!ensureWiFi()) {
+      last_failure_reason_ = FailureReason::kWifiDisconnected;
       if (attempt + 1 < lantern::kUploadMaxAttempts) {
         const uint32_t backoff_ms = boundedBackoff(
             lantern::kUploadBackoffBaseMs,
@@ -299,5 +337,8 @@ bool BackendTransport::sendWavFile(
       "PIPELINE upload_attempts=%u upload_total_ms=%lu result=failed\n",
       lantern::kUploadMaxAttempts,
       static_cast<unsigned long>(millis() - upload_started_ms));
+  Serial.printf(
+      "Backend failure reason: %s\n",
+      failureReasonName(last_failure_reason_));
   return false;
 }

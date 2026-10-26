@@ -34,6 +34,18 @@
 #define RELAY_ACTIVE_LOW 1
 #endif
 
+#ifndef LANTERN_LCD_ADDRESS
+#define LANTERN_LCD_ADDRESS 0x27
+#endif
+
+#ifndef LANTERN_LCD_SDA
+#define LANTERN_LCD_SDA 21
+#endif
+
+#ifndef LANTERN_LCD_SCL
+#define LANTERN_LCD_SCL 22
+#endif
+
 namespace lantern {
 namespace pins {
 constexpr gpio_num_t kI2sBclk = GPIO_NUM_26;
@@ -47,6 +59,9 @@ constexpr uint8_t kRelayControl = 23;
 }  // namespace pins
 
 constexpr bool kRelayActiveLow = RELAY_ACTIVE_LOW != 0;
+constexpr uint8_t kLcdPreferredAddress = LANTERN_LCD_ADDRESS;
+constexpr uint8_t kLcdSda = LANTERN_LCD_SDA;
+constexpr uint8_t kLcdScl = LANTERN_LCD_SCL;
 
 constexpr uint32_t kAudioSampleRateHz = 16000;
 constexpr uint16_t kAudioFrameMs = 20;

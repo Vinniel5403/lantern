@@ -5,10 +5,17 @@
 #include "lantern_config.h"
 #include "relay_controller.h"
 
+enum class CommandResult : uint8_t {
+  kRejected,
+  kInvalid,
+  kLightOn,
+  kLightOff,
+};
+
 class CommandHandler {
  public:
   void begin(RelayController* relay_controller = nullptr);
-  void handleBackendResponse(const String& response);
+  CommandResult handleBackendResponse(const String& response);
   void handleSerialCommand(const String& command);
 
  private:

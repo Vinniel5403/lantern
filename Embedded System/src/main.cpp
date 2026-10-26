@@ -4,10 +4,13 @@
 #include "audio_filter.h"
 #include "command_handler.h"
 #include "lantern_config.h"
+#include "lcd_controller.h"
 #include "relay_controller.h"
 #include "transport.h"
 #include "utterance_segmenter.h"
 #include "vad.h"
+
+#include <WiFi.h>
 
 AudioCapture audio_capture;
 AudioFilter audio_filter;
@@ -15,6 +18,7 @@ VoiceActivityGate vad;
 BackendTransport transport;
 CommandHandler command_handler;
 RelayController relay_controller;
+LcdController lcd;
 UtteranceSegmenter segmenter;
 int16_t audio_frame[lantern::kAudioFrameSamples] = {};
 uint32_t utterance_started_ms = 0;
@@ -62,6 +66,8 @@ void printSignalTelemetry(
 void setup() {
   Serial.begin(115200);
   Serial.setTimeout(25);
+  lcd.begin();
+  lcd.setState(DisplayState::BOOTING, lcd.available() ? "STARTING" : "LCD OFFLINE");
   // Initialize low-voltage outputs before starting I2S or blocking on Wi-Fi.
   command_handler.begin(&relay_controller);
   audio_capture.begin();
@@ -69,6 +75,11 @@ void setup() {
   segmenter.begin();
   transport.begin();
   segmenter.reset();
+  if (WiFi.status() == WL_CONNECTED) {
+    lcd.setState(DisplayState::IDLE, "SAY TEE");
+  } else {
+    lcd.setState(DisplayState::WIFI_DISCONNECTED, "RECONNECTING");
+  }
   Serial.println("Lantern Phase 3.5 firmware ready: hands-free I2S capture");
   Serial.println("Audio is sent as bounded WAV utterances; no push-to-talk input.");
   Serial.println("INMP441 telemetry: mean/peak/min/max every 1 second");
@@ -76,6 +87,14 @@ void setup() {
 }
 
 void loop() {
+  lcd.tick();
+  if (!lcd.holdingMessage()) {
+    lcd.setState(
+        WiFi.status() == WL_CONNECTED ? DisplayState::LISTENING
+                                      : DisplayState::WIFI_DISCONNECTED,
+        WiFi.status() == WL_CONNECTED ? "WAITING SPEECH" : "RECONNECTING");
+  }
+
   if (Serial.available()) {
     command_handler.handleSerialCommand(Serial.readStringUntil('\n'));
   }
@@ -98,6 +117,7 @@ void loop() {
   const bool is_recording = segmenter.active();
   if (!was_recording && is_recording) {
     utterance_started_ms = millis();
+    lcd.setState(DisplayState::RECORDING, "CAPTURING");
     Serial.printf(
         "RECORDING START pre_roll_ms=%u\n",
         lantern::kPreRollMs);
@@ -115,6 +135,7 @@ void loop() {
       audio_frame, samples_read, speech, is_recording);
   if (!utterance_complete) return;
 
+  lcd.setState(DisplayState::PROCESSING, "ASR + INTENT");
   const uint32_t upload_started_ms = millis();
   String response;
   const bool upload_ok = transport.sendWavFile(
@@ -126,8 +147,38 @@ void loop() {
       upload_ok ? "ok" : "failed");
   if (!upload_ok) {
     Serial.println("Utterance upload failed; continuing to listen");
+    switch (transport.lastFailureReason()) {
+      case BackendTransport::FailureReason::kWifiDisconnected:
+        lcd.setState(DisplayState::WIFI_DISCONNECTED, "RECONNECTING", 1500);
+        break;
+      case BackendTransport::FailureReason::kHttpTimeout:
+        lcd.setState(DisplayState::BACKEND_ERROR, "HTTP TIMEOUT", 1500);
+        break;
+      case BackendTransport::FailureReason::kAsrFailure:
+        lcd.setState(DisplayState::BACKEND_ERROR, "ASR FAILED", 1500);
+        break;
+      default:
+        lcd.setState(DisplayState::BACKEND_ERROR, "HTTP/ASR FAIL", 1500);
+        break;
+    }
   } else {
-    command_handler.handleBackendResponse(response);
+    const CommandResult command_result =
+        command_handler.handleBackendResponse(response);
+    switch (command_result) {
+      case CommandResult::kLightOn:
+        lcd.setState(DisplayState::LIGHT_ON, "GPIO CMD SENT", 1500);
+        break;
+      case CommandResult::kLightOff:
+        lcd.setState(DisplayState::LIGHT_OFF, "GPIO CMD SENT", 1500);
+        break;
+      case CommandResult::kInvalid:
+        lcd.setState(DisplayState::COMMAND_REJECTED, "INVALID RESPONSE", 1500);
+        break;
+      case CommandResult::kRejected:
+      default:
+        lcd.setState(DisplayState::COMMAND_REJECTED, "WAKE/INTENT NO", 1500);
+        break;
+    }
     Serial.printf(
         "PIPELINE total_to_command_end_ms=%lu\n",
         static_cast<unsigned long>(millis() - utterance_started_ms));

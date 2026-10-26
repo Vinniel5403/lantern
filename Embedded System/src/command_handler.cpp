@@ -85,7 +85,7 @@ void CommandHandler::handleSerialCommand(const String& command) {
   }
 }
 
-void CommandHandler::handleBackendResponse(const String& response) {
+CommandResult CommandHandler::handleBackendResponse(const String& response) {
   Serial.print("Backend response: ");
   Serial.println(response);
   const uint32_t handler_started_us = micros();
@@ -107,20 +107,20 @@ void CommandHandler::handleBackendResponse(const String& response) {
       request_id.length() > 0 ? request_id.c_str() : "none");
   if (!accepted) {
     Serial.println("Relay/LED command rejected: backend accepted=false");
-    return;
+    return CommandResult::kRejected;
   }
   if (!wake_word_detected) {
     Serial.println("Relay/LED command rejected: wake word missing");
-    return;
+    return CommandResult::kRejected;
   }
   if (hasExecutedRequest(request_id)) {
     Serial.printf("Duplicate backend command ignored request_id=%s\n",
                   request_id.c_str());
-    return;
+    return CommandResult::kRejected;
   }
   if (light_on == light_off) {
     Serial.println("Invalid backend response: expected one LIGHT_ON/OFF intent");
-    return;
+    return CommandResult::kInvalid;
   }
   const bool requested_on = light_on;
   if (relay_controller_ != nullptr) {
@@ -142,4 +142,5 @@ void CommandHandler::handleBackendResponse(const String& response) {
   }
   setDemoLed(requested_on);
   rememberExecutedRequest(request_id);
+  return requested_on ? CommandResult::kLightOn : CommandResult::kLightOff;
 }
