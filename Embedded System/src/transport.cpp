@@ -2,6 +2,7 @@
 
 #include <LittleFS.h>
 #include <WiFi.h>
+#include <esp_system.h>
 
 #include <string.h>
 
@@ -120,8 +121,10 @@ bool BackendTransport::ensureWiFi() {
 
 String BackendTransport::nextRequestId() {
   static uint32_t sequence = 0;
+  static const uint32_t boot_nonce = esp_random();
   ++sequence;
-  return String("esp32-") + String(millis(), HEX) + "-" + String(sequence, HEX);
+  return String("esp32-") + String(boot_nonce, HEX) + "-" +
+         String(millis(), HEX) + "-" + String(sequence, HEX);
 }
 
 BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
@@ -129,6 +132,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
     size_t sample_count,
     const String& request_id,
     String* response) {
+  const uint32_t attempt_started_ms = millis();
   const size_t pcm_bytes = sample_count * sizeof(int16_t);
   File pcm_file = LittleFS.open(pcm_path, FILE_READ);
   if (!pcm_file || pcm_file.size() != pcm_bytes) {
@@ -204,6 +208,7 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
   }
 
   *response = "";
+  response->reserve(kMaxResponseBytes);
   const uint32_t response_started_at = millis();
   while ((client.connected() || client.available()) &&
          millis() - response_started_at < lantern::kHttpTimeoutMs &&
@@ -215,8 +220,10 @@ BackendTransport::AttemptResult BackendTransport::sendWavAttempt(
     }
   }
   client.stop();
-  Serial.printf("Backend HTTP status: %d request_id=%s\n",
-                status_code, request_id.c_str());
+  Serial.printf("Backend HTTP status: %d request_id=%s http_attempt_ms=%lu\n",
+                status_code,
+                request_id.c_str(),
+                static_cast<unsigned long>(millis() - attempt_started_ms));
 
   if (status_code >= 200 && status_code < 300 && response->length() > 0) {
     return AttemptResult::kSuccess;
@@ -235,8 +242,14 @@ bool BackendTransport::sendWavFile(
     Serial.println("Audio upload rejected: invalid buffer");
     return false;
   }
+  if (sample_count > lantern::kMaxRecordingSamples) {
+    Serial.println("Audio upload rejected: sample count exceeds configured bound");
+    return false;
+  }
 
   const String request_id = nextRequestId();
+  const uint32_t upload_started_ms = millis();
+  *response = "";
   for (uint8_t attempt = 0; attempt < lantern::kUploadMaxAttempts; ++attempt) {
     Serial.printf(
         "Audio upload attempt %u/%u request_id=%s\n",
@@ -258,7 +271,13 @@ bool BackendTransport::sendWavFile(
 
     const AttemptResult result =
         sendWavAttempt(pcm_path, sample_count, request_id, response);
-    if (result == AttemptResult::kSuccess) return true;
+    if (result == AttemptResult::kSuccess) {
+      Serial.printf(
+          "PIPELINE upload_attempts=%u upload_total_ms=%lu result=ok\n",
+          attempt + 1,
+          static_cast<unsigned long>(millis() - upload_started_ms));
+      return true;
+    }
     if (result == AttemptResult::kPermanentFailure) {
       Serial.println("Audio upload rejected by backend; no retry");
       return false;
@@ -276,5 +295,9 @@ bool BackendTransport::sendWavFile(
 
   Serial.printf("Audio upload failed after %u attempts; utterance discarded\n",
                 lantern::kUploadMaxAttempts);
+  Serial.printf(
+      "PIPELINE upload_attempts=%u upload_total_ms=%lu result=failed\n",
+      lantern::kUploadMaxAttempts,
+      static_cast<unsigned long>(millis() - upload_started_ms));
   return false;
 }
