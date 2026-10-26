@@ -66,6 +66,10 @@ void LcdController::tick() {
   if (static_cast<int32_t>(millis() - hold_until_ms_) < 0) return;
 
   hold_until_ms_ = 0;
+  if (state_ == DisplayState::WIFI_DISCONNECTED) {
+    setState(DisplayState::WIFI_DISCONNECTED, "RECONNECTING");
+    return;
+  }
   setState(DisplayState::IDLE, "SAY TEE");
 }
 
@@ -73,6 +77,12 @@ void LcdController::setState(
     DisplayState state,
     const char* detail,
     uint32_t hold_ms) {
+  if (state_ != state) {
+    Serial.printf(
+        "[LCD] %s -> %s\n",
+        stateName(state_),
+        stateName(state));
+  }
   state_ = state;
   detail_ = detail == nullptr ? "" : detail;
   hold_until_ms_ = hold_ms == 0 ? 0 : millis() + hold_ms;

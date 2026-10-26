@@ -4,6 +4,8 @@
 
 class BackendTransport {
  public:
+  using ConnectionStatusCallback = void (*)(bool connected);
+
   enum class FailureReason : uint8_t {
     kNone,
     kInvalidAudio,
@@ -16,6 +18,7 @@ class BackendTransport {
   };
 
   void begin();
+  void setConnectionStatusCallback(ConnectionStatusCallback callback);
   bool sendWavFile(const char* pcm_path, size_t sample_count, String* response);
   FailureReason lastFailureReason() const { return last_failure_reason_; }
   static const char* failureReasonName(FailureReason reason);
@@ -24,6 +27,7 @@ class BackendTransport {
   enum class AttemptResult { kSuccess, kRetryableFailure, kPermanentFailure };
 
   bool ensureWiFi();
+  void notifyConnectionStatus(bool connected);
   AttemptResult sendWavAttempt(
       const char* pcm_path,
       size_t sample_count,
@@ -32,4 +36,7 @@ class BackendTransport {
   String nextRequestId();
 
   FailureReason last_failure_reason_ = FailureReason::kNone;
+  ConnectionStatusCallback connection_status_callback_ = nullptr;
+  bool connection_status_known_ = false;
+  bool last_connection_status_ = false;
 };

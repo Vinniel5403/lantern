@@ -53,6 +53,28 @@ class MockLcd:
         self.refresh_count += 1
 
 
+class DisplayPriorityModel:
+    """Host model for main.cpp's recording/Wi-Fi display priority."""
+
+    def __init__(self) -> None:
+        self.state = DisplayState.LISTENING
+        self.holding_message = False
+
+    def refresh(self, *, recording: bool, wifi_connected: bool) -> None:
+        if self.holding_message:
+            return
+        if not wifi_connected:
+            self.state = DisplayState.WIFI_DISCONNECTED
+        elif recording:
+            self.state = DisplayState.RECORDING
+        else:
+            self.state = DisplayState.LISTENING
+
+    def utterance_completed(self) -> None:
+        if not self.holding_message:
+            self.state = DisplayState.PROCESSING
+
+
 class LcdStateTests(unittest.TestCase):
     def test_initialization_and_unavailable_lcd(self) -> None:
         lcd = MockLcd(available=False)
@@ -98,6 +120,52 @@ class LcdStateTests(unittest.TestCase):
         self.assertEqual(lcd.lines, ("WIFI OFFLINE", "RECONNECTING"))
         lcd.set_state(DisplayState.BACKEND_ERROR, "HTTP TIMEOUT")
         self.assertEqual(lcd.lines, ("BACKEND ERROR", "HTTP TIMEOUT"))
+
+    def test_recording_has_priority_over_normal_listening_refresh(self) -> None:
+        display = DisplayPriorityModel()
+
+        display.refresh(recording=True, wifi_connected=True)
+        self.assertEqual(display.state, DisplayState.RECORDING)
+
+        # The audio segment remains active across subsequent frames.
+        display.refresh(recording=True, wifi_connected=True)
+        self.assertEqual(display.state, DisplayState.RECORDING)
+
+        display.utterance_completed()
+        self.assertEqual(display.state, DisplayState.PROCESSING)
+
+    def test_wifi_offline_is_not_overwritten_until_reconnect(self) -> None:
+        display = DisplayPriorityModel()
+
+        display.refresh(recording=False, wifi_connected=False)
+        self.assertEqual(display.state, DisplayState.WIFI_DISCONNECTED)
+        display.refresh(recording=False, wifi_connected=False)
+        self.assertEqual(display.state, DisplayState.WIFI_DISCONNECTED)
+
+        display.refresh(recording=False, wifi_connected=True)
+        self.assertEqual(display.state, DisplayState.LISTENING)
+
+    def test_wifi_error_has_priority_over_recording_refresh(self) -> None:
+        display = DisplayPriorityModel()
+
+        display.refresh(recording=True, wifi_connected=False)
+
+        self.assertEqual(display.state, DisplayState.WIFI_DISCONNECTED)
+
+    def test_non_recording_audio_does_not_fake_recording_state(self) -> None:
+        display = DisplayPriorityModel()
+
+        display.refresh(recording=False, wifi_connected=True)
+        self.assertEqual(display.state, DisplayState.LISTENING)
+
+    def test_temporary_message_blocks_normal_refresh(self) -> None:
+        display = DisplayPriorityModel()
+        display.state = DisplayState.LIGHT_ON
+        display.holding_message = True
+
+        display.refresh(recording=False, wifi_connected=True)
+
+        self.assertEqual(display.state, DisplayState.LIGHT_ON)
 
 
 if __name__ == "__main__":

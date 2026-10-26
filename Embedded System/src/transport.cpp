@@ -76,6 +76,19 @@ void BackendTransport::begin() {
   }
 }
 
+void BackendTransport::setConnectionStatusCallback(
+    ConnectionStatusCallback callback) {
+  connection_status_callback_ = callback;
+}
+
+void BackendTransport::notifyConnectionStatus(bool connected) {
+  if (connection_status_callback_ == nullptr) return;
+  if (connection_status_known_ && last_connection_status_ == connected) return;
+  connection_status_known_ = true;
+  last_connection_status_ = connected;
+  connection_status_callback_(connected);
+}
+
 const char* BackendTransport::failureReasonName(FailureReason reason) {
   switch (reason) {
     case FailureReason::kNone:
@@ -100,7 +113,11 @@ const char* BackendTransport::failureReasonName(FailureReason reason) {
 }
 
 bool BackendTransport::ensureWiFi() {
-  if (WiFi.status() == WL_CONNECTED) return true;
+  if (WiFi.status() == WL_CONNECTED) {
+    notifyConnectionStatus(true);
+    return true;
+  }
+  notifyConnectionStatus(false);
   if (strlen(LANTERN_WIFI_SSID) == 0) {
     Serial.println("Wi-Fi credentials are not configured in secrets.h");
     return false;
@@ -121,6 +138,7 @@ bool BackendTransport::ensureWiFi() {
     }
     Serial.println();
     if (WiFi.status() == WL_CONNECTED) {
+      notifyConnectionStatus(true);
       Serial.print("Wi-Fi connected, IP: ");
       Serial.println(WiFi.localIP());
       return true;
@@ -139,6 +157,7 @@ bool BackendTransport::ensureWiFi() {
   }
 
   Serial.println("Wi-Fi reconnect exhausted; audio upload deferred");
+  notifyConnectionStatus(false);
   return false;
 }
 

@@ -39,11 +39,11 @@
 #endif
 
 #ifndef LANTERN_LCD_SDA
-#define LANTERN_LCD_SDA 21
+#define LANTERN_LCD_SDA 18
 #endif
 
 #ifndef LANTERN_LCD_SCL
-#define LANTERN_LCD_SCL 22
+#define LANTERN_LCD_SCL 19
 #endif
 
 namespace lantern {

@@ -23,6 +23,18 @@ UtteranceSegmenter segmenter;
 int16_t audio_frame[lantern::kAudioFrameSamples] = {};
 uint32_t utterance_started_ms = 0;
 
+void onWiFiConnectionStatus(bool connected) {
+  Serial.printf("[WiFi] %s\n", connected ? "Connected" : "Disconnected");
+  if (!connected) {
+    lcd.setState(DisplayState::WIFI_DISCONNECTED, "RECONNECTING");
+    return;
+  }
+
+  if (!segmenter.active() && !lcd.holdingMessage()) {
+    lcd.setState(DisplayState::LISTENING, "WAITING SPEECH");
+  }
+}
+
 void printSignalTelemetry(
     const int16_t* samples,
     size_t sample_count,
@@ -73,6 +85,7 @@ void setup() {
   audio_capture.begin();
   audio_filter.reset();
   segmenter.begin();
+  transport.setConnectionStatusCallback(onWiFiConnectionStatus);
   transport.begin();
   segmenter.reset();
   if (WiFi.status() == WL_CONNECTED) {
@@ -89,10 +102,13 @@ void setup() {
 void loop() {
   lcd.tick();
   if (!lcd.holdingMessage()) {
-    lcd.setState(
-        WiFi.status() == WL_CONNECTED ? DisplayState::LISTENING
-                                      : DisplayState::WIFI_DISCONNECTED,
-        WiFi.status() == WL_CONNECTED ? "WAITING SPEECH" : "RECONNECTING");
+    if (WiFi.status() != WL_CONNECTED) {
+      lcd.setState(DisplayState::WIFI_DISCONNECTED, "RECONNECTING");
+    } else if (segmenter.active()) {
+      lcd.setState(DisplayState::RECORDING, "CAPTURING");
+    } else {
+      lcd.setState(DisplayState::LISTENING, "WAITING SPEECH");
+    }
   }
 
   if (Serial.available()) {
