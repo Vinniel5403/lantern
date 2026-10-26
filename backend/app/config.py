@@ -16,8 +16,8 @@ class Settings(BaseSettings):
     audio_save_dir: str = "runtime_audio"
     # Safe default; local integration can temporarily disable the gate via env.
     require_wake_word: bool = True
-    wake_phrase: str = "\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e23\u0e4c\u0e19"
-    wake_word_alternatives: str = "lantern,\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e19,\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e48\u0e19,\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e23\u0e19"
+    wake_phrase: str = "\u0e15\u0e35\u0e4b"
+    wake_word_alternatives: str = "tee,\u0e15\u0e35,\u0e17\u0e35"
     duplicate_window_s: float = Field(default=30.0, ge=0)
     duplicate_cache_size: int = Field(default=128, gt=0)
     request_replay_window_s: float = Field(default=60.0, ge=0)

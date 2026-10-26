@@ -49,6 +49,10 @@ _COMMANDS: tuple[tuple[str, tuple[str, ...], str], ...] = (
     ),
 )
 _NEGATIONS = ("\u0e44\u0e21\u0e48", "\u0e2d\u0e22\u0e48\u0e32", "\u0e2b\u0e49\u0e32\u0e21")
+_SHORT_RELAY_COMMANDS = {
+    "\u0e40\u0e1b\u0e34\u0e14": ("LIGHT_ON", "demo_led"),
+    "\u0e1b\u0e34\u0e14": ("LIGHT_OFF", "demo_led"),
+}
 
 
 def _contains_pattern(text: str, pattern: str) -> bool:
@@ -79,17 +83,48 @@ class IntentDetector:
         if not compact:
             return _unknown("empty command after wake word")
 
+        # Allow the deliberately narrow voice forms "เปิด" and "ปิด" after
+        # wake-word extraction. Exact matching avoids treating "เปิดพัดลม"
+        # or a longer negated sentence as a light command.
+        short_command = _SHORT_RELAY_COMMANDS.get(compact)
+        if short_command is not None:
+            name, output = short_command
+            return IntentDecision(
+                name=name,
+                parameters={"output": output},
+                accepted=True,
+                reason="short allowlisted command",
+            )
+
         matches = [
             (name, output)
             for name, patterns, output in _COMMANDS
             if any(_contains_pattern(compact, pattern) for pattern in patterns)
         ]
 
-        if not matches:
-            return _unknown("no allowlisted intent matched")
-
         if any(negation in compact for negation in _NEGATIONS):
             return _unknown("negative command is not accepted")
+
+        if not matches:
+            # Keep the voice contract intentionally small: when the user has
+            # explicitly activated Lantern, bare Thai เปิด/ปิด words are
+            # sufficient for the demo light. Device-specific phrases above
+            # still win, so "เปิดพัดลม" remains FAN_ON.
+            if "\u0e40\u0e1b\u0e34\u0e14" in compact:
+                return IntentDecision(
+                    name="LIGHT_ON",
+                    parameters={"output": "demo_led"},
+                    accepted=True,
+                    reason="open command word",
+                )
+            if "\u0e1b\u0e34\u0e14" in compact:
+                return IntentDecision(
+                    name="LIGHT_OFF",
+                    parameters={"output": "demo_led"},
+                    accepted=True,
+                    reason="close command word",
+                )
+            return _unknown("no allowlisted intent matched")
 
         distinct_names = {name for name, _ in matches}
         if len(distinct_names) > 1:

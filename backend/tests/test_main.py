@@ -49,6 +49,44 @@ def test_transcribe_uses_mock_asr_and_allowlisted_intent() -> None:
     assert response.json()["intent"]["name"] == "LIGHT_ON"
 
 
+def test_transcribe_accepts_wake_word_and_command_inside_sentence() -> None:
+    application = create_app(Settings(require_wake_word=True))
+    application.state.asr_provider = MockASRProvider(
+        "\u0e0a\u0e48\u0e27\u0e22\u0e15\u0e35\u0e4b\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f\u0e2b\u0e19\u0e48\u0e2d\u0e22"
+    )
+    client = TestClient(application)
+
+    response = client.post(
+        "/v1/utterances/transcribe",
+        files={"audio": ("utterance.wav", wav_fixture(), "audio/wav")},
+    )
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload["wake_word_detected"] is True
+    assert payload["intent"]["name"] == "LIGHT_ON"
+    assert payload["intent"]["accepted"] is True
+
+
+def test_transcribe_accepts_command_before_wake_word() -> None:
+    application = create_app(Settings(require_wake_word=True))
+    application.state.asr_provider = MockASRProvider(
+        "\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f\u0e04\u0e38\u0e13\u0e2b\u0e32\u0e22\u0e15\u0e35"
+    )
+    client = TestClient(application)
+
+    response = client.post(
+        "/v1/utterances/transcribe",
+        files={"audio": ("utterance.wav", wav_fixture(), "audio/wav")},
+    )
+
+    payload = response.json()
+    assert response.status_code == 200
+    assert payload["wake_word_detected"] is True
+    assert payload["intent"]["name"] == "LIGHT_ON"
+    assert payload["intent"]["accepted"] is True
+
+
 def test_transcribe_without_wake_word_is_ignored() -> None:
     application = create_app(Settings(require_wake_word=True))
     application.state.asr_provider = MockASRProvider("\u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f")
@@ -148,6 +186,26 @@ def test_transcribe_logs_recognized_text(caplog) -> None:
     assert text in caplog.text
 
 
+def test_transcribe_logs_pipeline_latency_stages(caplog) -> None:
+    application = create_app(Settings())
+    application.state.asr_provider = MockASRProvider("\u0e15\u0e35\u0e4b \u0e40\u0e1b\u0e34\u0e14")
+    client = TestClient(application)
+    caplog.set_level(logging.INFO, logger="lantern.asr")
+
+    response = client.post(
+        "/v1/utterances/transcribe",
+        headers={"X-Lantern-Request-ID": "latency-test-1"},
+        files={"audio": ("utterance.wav", wav_fixture(), "audio/wav")},
+    )
+
+    assert response.status_code == 200
+    assert "pipeline_latency_ms" in caplog.text
+    assert "asr=" in caplog.text
+    assert "wake_word=" in caplog.text
+    assert "intent=" in caplog.text
+    assert "total=" in caplog.text
+
+
 def test_non_wav_is_rejected_before_asr() -> None:
     client = TestClient(create_app(Settings()))
 
@@ -173,7 +231,7 @@ def test_malformed_wav_is_rejected_before_asr() -> None:
 def test_duplicate_audio_is_ignored_without_second_asr_call() -> None:
     application = create_app(Settings())
     provider = CountingMockASRProvider(
-        "\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e23\u0e19 \u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f"
+        "\u0e15\u0e35\u0e4b \u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f"
     )
     application.state.asr_provider = provider
     client = TestClient(application)
@@ -196,7 +254,7 @@ def test_duplicate_audio_is_ignored_without_second_asr_call() -> None:
 def test_request_id_replays_cached_response_without_second_asr_call() -> None:
     application = create_app(Settings())
     provider = CountingMockASRProvider(
-        "\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e23\u0e19 \u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f"
+        "\u0e15\u0e35\u0e4b \u0e40\u0e1b\u0e34\u0e14\u0e44\u0e1f"
     )
     application.state.asr_provider = provider
     client = TestClient(application)

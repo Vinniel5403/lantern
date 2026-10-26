@@ -5,12 +5,11 @@ from dataclasses import dataclass
 from app.services.text_normalization import normalize_text
 
 
-DEFAULT_THAI_WAKE_WORD = "\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e23\u0e4c\u0e19"
+DEFAULT_THAI_WAKE_WORD = "\u0e15\u0e35\u0e4b"
 DEFAULT_WAKE_ALTERNATIVES = (
-    "lantern",
-    "\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e19",
-    "\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e48\u0e19",
-    "\u0e41\u0e25\u0e19\u0e40\u0e17\u0e34\u0e23\u0e19",
+    "tee",
+    "\u0e15\u0e35",
+    "\u0e17\u0e35",
 )
 
 
@@ -40,24 +39,32 @@ class WakeWordVerifier:
     def match(self, transcript: str) -> WakeWordMatch:
         normalized = normalize_text(transcript)
         for candidate in self._candidates():
-            if not normalized.startswith(candidate):
-                continue
+            search_from = 0
+            while (index := normalized.find(candidate, search_from)) >= 0:
+                command_start = index + len(candidate)
+                before = normalized[index - 1] if index else ""
+                after = normalized[command_start] if command_start < len(normalized) else ""
+                if (
+                    candidate[-1].isascii()
+                    and candidate[-1].isalnum()
+                    and (
+                        (before and before.isascii() and before.isalnum())
+                        or (after and after.isascii() and after.isalnum())
+                    )
+                ):
+                    search_from = index + 1
+                    continue
 
-            remainder = normalized[len(candidate) :]
-            if (
-                remainder
-                and candidate[-1].isascii()
-                and candidate[-1].isalnum()
-                and remainder[0].isascii()
-                and remainder[0].isalnum()
-            ):
-                continue
-            return WakeWordMatch(
-                detected=True,
-                normalized_text=normalized,
-                matched_phrase=candidate,
-                command_text=normalize_text(remainder),
-            )
+                return WakeWordMatch(
+                    detected=True,
+                    normalized_text=normalized,
+                    matched_phrase=candidate,
+                    # Typhoon may place the wake word at the end of a Thai
+                    # sentence, so keep text from both sides for intent parsing.
+                    command_text=normalize_text(
+                        f"{normalized[:index]} {normalized[command_start:]}"
+                    ),
+                )
 
         return WakeWordMatch(detected=False, normalized_text=normalized)
 
