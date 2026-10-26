@@ -43,3 +43,4 @@ Thumbs.db
 
 # Markdown documentation is kept local for now
 *.md
+!/README.md
