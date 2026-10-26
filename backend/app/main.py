@@ -1,5 +1,6 @@
 import logging
 import re
+import time
 
 from fastapi import Depends, FastAPI, File, HTTPException, Request, UploadFile, status
 
@@ -57,28 +58,52 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             lambda: application.state.asr_provider
         ),
     ) -> UtteranceResponse:
+        pipeline_started = time.perf_counter()
         request_id = request.headers.get("X-Lantern-Request-ID")
         if request_id is not None and not _REQUEST_ID_PATTERN.fullmatch(request_id):
             raise HTTPException(status_code=400, detail="invalid request ID")
 
+        audio_read_started = time.perf_counter()
         audio_bytes = await audio.read(runtime_settings.max_audio_bytes + 1)
+        audio_read_ms = (time.perf_counter() - audio_read_started) * 1000
         if len(audio_bytes) > runtime_settings.max_audio_bytes:
             raise HTTPException(status_code=413, detail="audio file is too large")
+        validation_started = time.perf_counter()
         try:
             validate_wav(audio_bytes)
         except AudioFormatError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
+        wav_validation_ms = (time.perf_counter() - validation_started) * 1000
 
         if request_id:
             cached_response = application.state.request_replay_cache.get(request_id)
             if cached_response is not None:
-                logger.info("execution_decision replayed_request=true request_id=%s", request_id)
+                logger.info(
+                    "execution_decision replayed_request=true request_id=%s",
+                    request_id,
+                )
+                logger.info(
+                    "pipeline_latency_ms request_id=%s stage=replay "
+                    "audio_read=%.2f wav_validation=%.2f total=%.2f",
+                    request_id,
+                    audio_read_ms,
+                    wav_validation_ms,
+                    (time.perf_counter() - pipeline_started) * 1000,
+                )
                 return cached_response.model_copy(
                     update={"replayed_request": True, "request_id": request_id}
                 )
 
         if not application.state.duplicate_guard.reserve(audio_bytes):
             logger.info("execution_decision duplicate=true accepted=false")
+            logger.info(
+                "pipeline_latency_ms request_id=%s stage=duplicate_guard "
+                "audio_read=%.2f wav_validation=%.2f total=%.2f",
+                request_id or "none",
+                audio_read_ms,
+                wav_validation_ms,
+                (time.perf_counter() - pipeline_started) * 1000,
+            )
             return UtteranceResponse(
                 transcript={"text": "", "provider": "duplicate_guard"},
                 wake_word_detected=False,
@@ -103,6 +128,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 ) from exc
             logger.info("saved uploaded WAV path=%s", saved_path)
 
+        asr_started = time.perf_counter()
         try:
             transcript = await provider.transcribe(
                 audio_bytes,
@@ -111,14 +137,24 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             )
         except RuntimeError as exc:
             application.state.duplicate_guard.release(audio_bytes)
+            logger.info(
+                "pipeline_latency_ms request_id=%s stage=asr_error "
+                "asr=%.2f total=%.2f",
+                request_id or "none",
+                (time.perf_counter() - asr_started) * 1000,
+                (time.perf_counter() - pipeline_started) * 1000,
+            )
             raise HTTPException(status_code=503, detail=str(exc)) from exc
+        asr_ms = (time.perf_counter() - asr_started) * 1000
 
         logger.info(
             "recognized text provider=%s text=%r",
             transcript.provider,
             transcript.text,
         )
+        wake_started = time.perf_counter()
         wake_match = application.state.wake_word_verifier.match(transcript.text)
+        wake_word_ms = (time.perf_counter() - wake_started) * 1000
         logger.info(
             "wake_word_detection detected=%s matched_phrase=%r",
             wake_match.detected,
@@ -133,6 +169,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 wake_match.command_text if wake_match.detected else transcript.text
             )
 
+        intent_started = time.perf_counter()
         if wake_match.detected or not runtime_settings.require_wake_word:
             intent = application.state.intent_detector.detect(command_text)
         else:
@@ -141,6 +178,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 accepted=False,
                 reason="wake word missing",
             )
+        intent_ms = (time.perf_counter() - intent_started) * 1000
         logger.info(
             "intent_detection name=%s accepted=%s reason=%s",
             intent.name,
@@ -156,6 +194,17 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             intent.name,
             intent.accepted,
             intent.reason,
+        )
+        logger.info(
+            "pipeline_latency_ms request_id=%s audio_read=%.2f "
+            "wav_validation=%.2f asr=%.2f wake_word=%.2f intent=%.2f total=%.2f",
+            request_id or "none",
+            audio_read_ms,
+            wav_validation_ms,
+            asr_ms,
+            wake_word_ms,
+            intent_ms,
+            (time.perf_counter() - pipeline_started) * 1000,
         )
         result = UtteranceResponse(
             transcript=transcript,
