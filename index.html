@@ -1,9 +1,698 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Phycom Project</title>
-  </head>
-  <body>
-    <h1>This is for the Phycom Project named LANTERN</h1>
-  </body>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LANTERN · Physical Computing</title>
+  <meta name="description" content="LANTERN — ระบบสั่งงานอุปกรณ์แรงดันต่ำด้วยเสียง ใช้ ESP32 และ FastAPI">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@400;500;600&family=Bai+Jamjuree:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* ขาวสะอาด + กระจกฝ้า */
+      --bg: #F4F6F8;
+      --surface: #FFFFFF;
+      --glass: rgba(255, 255, 255, 0.62);
+      --line: rgba(20, 32, 44, 0.08);
+      --ink: #1B2530;
+      --ink-soft: #5B6772;
+
+      /* ชื่อเดิม ใช้ต่อใน markup */
+      --panel: #2A3440;
+      --panel-deep: #1B2530;
+
+      /* สีสายไฟบ้าน */
+      --wire-live: #A0582F;
+      --wire-neutral: #3B76B5;
+      --wire-ground: #7FA03E;
+      --wire-signal: #D09A2E;
+
+      /* แสงหลอด */
+      --brass: #A8741E;
+      --glow: #F5B94A;
+      --glow-hot: #FFE3A1;
+
+      --font-head: "Bai Jamjuree", system-ui, sans-serif;
+      --font-body: "Anuphan", system-ui, sans-serif;
+
+      --measure: 68ch;
+      --gutter: clamp(16px, 5vw, 56px);
+      --nav-h: 56px;
+
+      --lift:
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        0 1px 2px rgba(20, 32, 44, 0.04),
+        0 24px 48px -24px rgba(20, 32, 44, 0.22);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font-body);
+      font-size: clamp(18px, 1.05rem + 0.25vw, 21px);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* แสงนุ่มๆ ด้านหลัง ให้กระจกมีอะไรให้มองทะลุ */
+    body::before {
+      content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(40vmax 40vmax at 8% 12%, rgba(173, 205, 235, 0.45), transparent 70%),
+        radial-gradient(36vmax 36vmax at 95% 85%, rgba(255, 221, 160, 0.35), transparent 70%);
+    }
+
+    h1, h2, h3 { font-family: var(--font-head); line-height: 1.2; margin: 0; }
+    h2 { font-size: clamp(1.7rem, 1.2rem + 1.6vw, 2.4rem); font-weight: 600; margin-bottom: 0.6em; }
+    h3 { font-size: 1.15rem; font-weight: 600; }
+    p { margin: 0 0 1em; max-width: var(--measure); }
+
+    a { color: var(--wire-neutral); }
+    :focus-visible { outline: 3px solid var(--wire-neutral); outline-offset: 3px; border-radius: 8px; }
+
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 0 var(--gutter); }
+
+    .glass {
+      background: var(--glass);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 24px;
+      box-shadow: var(--lift);
+    }
+
+    /* ---------- nav ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 10;
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(18px) saturate(1.2);
+      -webkit-backdrop-filter: blur(18px) saturate(1.2);
+      box-shadow: 0 1px 0 var(--line);
+    }
+    .nav ul {
+      list-style: none; margin: 0 auto; max-width: 1080px;
+      padding: 0 var(--gutter);
+      height: var(--nav-h); align-items: center;
+      display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none;
+    }
+    .nav a {
+      display: block; padding: 0 12px; line-height: var(--nav-h); white-space: nowrap;
+      color: var(--ink-soft); text-decoration: none; font-family: var(--font-head);
+      font-weight: 500; font-size: 0.95rem;
+    }
+    .nav a:hover { color: var(--ink); }
+
+    /* ---------- hero ---------- */
+    .hero {
+      position: relative; overflow: hidden;
+      display: flex; align-items: center;
+      min-height: calc(100vh - var(--nav-h));
+      min-height: calc(100svh - var(--nav-h));
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(circle at 74% 46%, rgba(255, 210, 130, 0.55), rgba(255, 210, 130, 0) 50%);
+      opacity: 0; transition: opacity 700ms ease;
+    }
+    .hero.is-on::before { opacity: 1; }
+
+    .hero-grid {
+      position: relative;
+      display: grid; grid-template-columns: 1.15fr 0.85fr; align-items: center;
+      gap: clamp(24px, 4vw, 64px);
+      width: 100%;
+      padding-block: clamp(48px, 8vw, 96px);
+    }
+    .course { font-family: var(--font-head); color: var(--ink-soft); font-size: 1rem; margin-bottom: 1.2rem; }
+    .hero h1 {
+      font-size: clamp(3.6rem, 2rem + 8vw, 8.5rem);
+      font-weight: 700; letter-spacing: 0.04em; line-height: 0.95;
+      color: var(--ink);
+      text-shadow: 0 14px 30px rgba(20, 32, 44, 0.10);
+      transition: color 700ms ease, text-shadow 700ms ease;
+    }
+    .hero.is-on h1 { color: #2A2010; text-shadow: 0 0 40px rgba(245, 185, 74, 0.45), 0 20px 36px rgba(20, 32, 44, 0.12); }
+    .tagline { font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem); margin-top: 1.4rem; color: var(--ink-soft); max-width: 30ch; }
+
+    /* โคมทรงกลมแก้วฝ้าบนแท่น */
+    .lamp {
+      --size: clamp(220px, 28vw, 340px);
+      position: relative; justify-self: center;
+      display: flex; flex-direction: column; align-items: center;
+      cursor: pointer; border-radius: 24px; -webkit-tap-highlight-color: transparent;
+    }
+    /* รูปหลอดไฟ 3D: 3dicons.co (CC0) */
+    .bulb { position: relative; width: var(--size); aspect-ratio: 1; }
+    .bulb img { position: absolute; inset: 0; width: 100%; height: 100%; }
+    .bulb .bulb-on {
+      opacity: 0; transition: opacity 600ms ease;
+      filter: drop-shadow(0 0 28px rgba(255, 190, 80, 0.75)) drop-shadow(0 0 90px rgba(255, 190, 80, 0.45));
+    }
+    .hero.is-on .bulb .bulb-on { opacity: 1; }
+
+    .floor {
+      width: calc(var(--size) * 0.95); height: calc(var(--size) * 0.12);
+      margin-top: calc(var(--size) * -0.1);
+      background: radial-gradient(closest-side, rgba(20, 32, 44, 0.2), rgba(20, 32, 44, 0));
+    }
+    .hero.is-on .floor { background: radial-gradient(closest-side, rgba(220, 150, 50, 0.3), rgba(255, 200, 100, 0)); }
+    .lamp-hint { margin: 14px 0 0; font-size: 0.9rem; color: var(--ink-soft); text-align: center; }
+
+    @media (prefers-reduced-motion: reduce) {
+      .hero::before, .hero h1, .bulb .bulb-on { transition: none !important; }
+    }
+
+    /* ---------- sections ---------- */
+    section[id] { scroll-margin-top: var(--nav-h); }
+    section.block { padding-block: clamp(44px, 6vw, 72px); }
+    .lead { font-size: 1.15em; color: var(--ink); }
+    .muted { color: var(--ink-soft); }
+
+    /* ไอเดีย: คนยืนเล่า */
+    #idea { padding-bottom: 0; overflow: hidden; }
+    .idea-grid {
+      display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
+      gap: clamp(24px, 4vw, 56px); align-items: end;
+    }
+    .idea-text { padding-bottom: clamp(56px, 8vw, 104px); }
+    .bubble { position: relative; padding: 24px 28px; max-width: 36em; background: rgba(255, 255, 255, 0.85); }
+    .bubble p { margin: 0; font-size: 1.12em; }
+    .bubble::after {
+      content: ""; position: absolute; right: -16px; top: 42%;
+      border-style: solid; border-width: 12px 0 12px 17px;
+      border-color: transparent transparent transparent rgba(255, 255, 255, 0.9);
+    }
+    .presenter { position: relative; margin: 0; align-self: end; }
+    .presenter::before {
+      content: ""; position: absolute; inset: 0 -25% 0 -25%;
+      background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 58%);
+    }
+    .presenter img { position: relative; display: block; width: 100%; height: auto; }
+
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: clamp(20px, 4vw, 48px); margin-top: 2rem; }
+    .split h3 { margin-bottom: 0.4em; }
+    .split > div { border-left: 3px solid var(--wire-neutral); padding-left: 18px; }
+    .split > div:first-child { border-left-color: var(--wire-live); }
+
+    /* flow diagram */
+    .flow { margin: 1.8rem 0 0; padding: clamp(16px, 3vw, 32px); overflow-x: auto; }
+    .flow svg { width: 100%; min-width: 640px; height: auto; display: block; overflow: visible; }
+    .flow .node .tile { fill: #FFFFFF; filter: url(#slab); }
+    .flow .node.brain .tile { fill: #EEF8F8; }
+    .flow .node.voice .tile { fill: #FFF7E6; }
+    .flow .node > text { font-family: var(--font-head); font-size: 17px; font-weight: 600; fill: var(--ink); }
+    .flow .node > text.sub { font-family: var(--font-body); font-size: 13.5px; font-weight: 400; fill: var(--ink-soft); }
+    .flow .live { stroke: var(--wire-live); stroke-width: 6; fill: none; stroke-linecap: round; }
+    .flow .signal { stroke: var(--wire-signal); stroke-width: 3.5; fill: none; stroke-dasharray: 8 6; }
+    .flow .audio { stroke: var(--wire-neutral); stroke-width: 3.5; fill: none; stroke-dasharray: 2 6; stroke-linecap: round; }
+    .flow .bulb-halo, .flow .bulb-lit { opacity: 0; transition: opacity 300ms ease; }
+    .flow .node.is-active :is(.bulb-halo, .bulb-lit), .hero.is-on ~ main .flow :is(.bulb-halo, .bulb-lit) { opacity: 1; }
+
+    /* ชี้/แตะเพื่อดูรายละเอียด */
+    .flow .part { cursor: pointer; outline: none; transition: opacity 200ms ease; }
+    .flow .hit { stroke: transparent; stroke-width: 28; fill: none; pointer-events: stroke; }
+    .flow.has-active .part:not(.is-active) { opacity: 0.3; }
+    .flow .node.is-active .tile { stroke: var(--glow); stroke-width: 3; }
+    .flow .link.is-active .live, .flow .link.is-active .signal, .flow .link.is-active .audio { stroke-width: 8; }
+    .tip {
+      position: fixed; z-index: 20; left: 0; top: 0; pointer-events: none;
+      max-width: 280px; padding: 10px 14px; border-radius: 14px;
+      background: rgba(255, 255, 255, 0.82); color: var(--ink);
+      backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+      border: 1px solid rgba(255, 255, 255, 0.95);
+      font-size: 0.92rem; line-height: 1.5;
+      box-shadow: 0 18px 36px -12px rgba(20, 32, 44, 0.3);
+      opacity: 0; transition: opacity 120ms ease;
+    }
+    .tip.is-shown { opacity: 1; }
+    .tip strong { display: block; font-family: var(--font-head); font-weight: 600; color: var(--brass); }
+    @media (prefers-reduced-motion: reduce) { .flow .part, .tip, .flow .bulb-halo, .flow .bulb-lit { transition: none; } }
+
+    .legend { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 18px; font-size: 0.92rem; color: var(--ink-soft); }
+    .legend span::before { content: ""; display: inline-block; width: 28px; height: 0; vertical-align: middle; margin-right: 8px; }
+    .legend .l-live::before { border-top: 6px solid var(--wire-live); border-radius: 3px; }
+    .legend .l-sig::before { border-top: 3px dashed var(--wire-signal); }
+    .legend .l-audio::before { border-top: 3px dotted var(--wire-neutral); }
+    .legend .legend-hint::before { display: none; }
+
+    .steps { list-style: none; padding: 0; margin: 2.4rem 0 0; counter-reset: s; display: grid; gap: 16px; max-width: var(--measure); }
+    .steps li { counter-increment: s; display: grid; grid-template-columns: 2.6rem 1fr; gap: 14px; align-items: baseline; }
+    .steps li::before {
+      content: counter(s); font-family: var(--font-head); font-weight: 700;
+      width: 2.2rem; height: 2.2rem; border-radius: 50%; display: grid; place-items: center;
+      background: radial-gradient(circle at 34% 28%, #FFFFFF 0%, #F3F6F9 45%, #D9E0E7 100%);
+      color: var(--ink); font-size: 1rem;
+      box-shadow: inset 0 1px 0 #fff, 0 8px 14px -6px rgba(20, 32, 44, 0.3);
+    }
+
+    /* parts: การ์ดมีรูป 3D */
+    .part-grid {
+      list-style: none; padding: 0; margin: 1.6rem 0 0;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 18px;
+    }
+    .part-card { position: relative; padding: 20px 20px 22px; }
+    .part-card img { display: block; width: 76px; height: 76px; margin: 0 0 10px -6px; filter: drop-shadow(0 10px 12px rgba(20, 32, 44, 0.16)); }
+    .part-card h3 { font-size: 1.05rem; margin-bottom: 0.3em; }
+    .part-card p { margin: 0; font-size: 0.92rem; line-height: 1.55; color: var(--ink-soft); }
+    .part-card .qty {
+      position: absolute; top: 18px; right: 18px;
+      font-family: var(--font-head); font-weight: 600; font-size: 0.85rem; color: var(--ink-soft);
+      padding: 2px 10px; border-radius: 999px; background: rgba(20, 32, 44, 0.05);
+    }
+
+    /* safety */
+    .safety { background: var(--panel); color: #E6ECEF; }
+    .safety h2 { color: var(--glow); }
+    .safety ul { margin: 0; padding-left: 1.2em; max-width: var(--measure); display: grid; gap: 10px; }
+    .safety li::marker { color: var(--glow); }
+
+    /* team */
+    .team { list-style: none; padding: 0; margin: 1.6rem 0 0; display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+    .team li { text-align: center; padding: 22px 12px 20px; }
+    .avatar {
+      width: 88px; height: 88px; margin: 0 auto 14px; border-radius: 50%; overflow: hidden;
+      background: linear-gradient(180deg, #FFFFFF, #E9EEF2);
+      box-shadow: inset 0 1px 0 #fff, 0 10px 18px -10px rgba(20, 32, 44, 0.35);
+    }
+    .avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .team .name { font-family: var(--font-head); font-weight: 600; font-size: 1.05rem; line-height: 1.35; }
+    .team .meta { margin-top: 4px; font-size: 0.85rem; color: var(--ink-soft); line-height: 1.5; }
+
+    footer { border-top: 1px solid var(--line); color: var(--ink-soft); padding-block: 32px; font-size: 0.92rem; }
+    footer p { margin: 0; }
+    footer .credit { margin-top: 6px; font-size: 0.8rem; }
+
+    /* ---------- responsive ---------- */
+    @media (max-width: 860px) {
+      .hero-grid { grid-template-columns: 1fr; }
+      .idea-grid { grid-template-columns: 1fr; gap: 28px; }
+      .idea-text { padding-bottom: 0; }
+      .bubble::after { right: auto; left: 60%; top: 100%; border-width: 17px 12px 0 12px; border-color: rgba(255, 255, 255, 0.9) transparent transparent transparent; }
+      .presenter { width: min(78%, 340px); justify-self: center; }
+      .lamp { --size: min(52vw, 230px); grid-row: 1; }
+      .team { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 640px) {
+      .split { grid-template-columns: 1fr; }
+      .team { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="nav" aria-label="สารบัญ">
+    <ul>
+      <li><a href="#idea">ไอเดีย</a></li>
+      <li><a href="#how">การทำงาน</a></li>
+      <li><a href="#parts">อุปกรณ์</a></li>
+      <li><a href="#team">ทีม</a></li>
+    </ul>
+  </nav>
+
+  <!-- ===================== HERO ===================== -->
+  <header class="hero" id="hero">
+    <div class="wrap hero-grid">
+      <div>
+        <p class="course">โปรเจควิชา Physical Computing</p>
+        <h1>LANTERN</h1>
+        <p class="tagline">โคมไฟอัจฉริยะที่สั่งเปิด-ปิดด้วยเสียง</p>
+
+
+      </div>
+
+      <div class="lamp" id="lamp" role="button" tabindex="0" aria-pressed="false" aria-label="เปิด-ปิดหลอดไฟ">
+        <div class="bulb">
+          <img src="assets/bulb-off.webp" width="400" height="400" alt="">
+          <img class="bulb-on" src="assets/bulb-on.webp" width="400" height="400" alt="">
+        </div>
+        <div class="floor"></div>
+        <p class="lamp-hint">แตะหลอดเพื่อเปิดไฟ</p>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- ===================== IDEA ===================== -->
+    <section class="block" id="idea">
+      <div class="wrap">
+        <div class="idea-grid">
+          <div class="idea-text">
+            <h2>ไอเดียของเรา</h2>
+            <div class="bubble glass">
+              <p>LANTERN เป็นระบบ hands-free ที่ฟังเสียงเราได้ แค่เรียกชื่อ “ตี๋” แล้วต่อด้วย “เปิด” หรือ “ปิด” ระบบจะส่งคำสั่งไปยัง ESP32 เพื่อควบคุมโหลดแรงดันต่ำสำหรับการสาธิต</p>
+            </div>
+            <div class="split">
+              <div>
+                <h3>ปัญหาที่เจอ</h3>
+                <p class="muted">นอนอยู่บนเตียงแล้วต้องลุกไปปิดไฟ มือไม่ว่างตอนถือของ หรือคนที่เดินไปกดสวิตช์ได้ลำบาก เช่น ผู้สูงอายุ</p>
+              </div>
+              <div>
+                <h3>สิ่งที่เราทำ</h3>
+                <p class="muted">หลังบ้านแปลงเสียงเป็นข้อความ ตรวจคำปลุกและคำสั่ง แล้วส่ง JSON command ผ่าน Wi-Fi ให้ ESP32 สั่งงานอุปกรณ์สาธิต</p>
+              </div>
+            </div>
+          </div>
+          <figure class="presenter">
+            <img src="assets/idea-person.webp" width="774" height="1125" alt="สมาชิกทีม LANTERN">
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== HOW ===================== -->
+    <section class="block" id="how">
+      <div class="wrap">
+        <h2>การทำงาน</h2>
+        <p>ระบบประกอบด้วยไมโครโฟน, FastAPI backend และ ESP32 ที่ทำงานด้วยไฟต่ำ โดย relay ใช้กับ LED หรือโหลด DC แรงดันต่ำเท่านั้น การต่อโหลดไฟบ้านไม่อยู่ในขอบเขตการทดสอบของ repository นี้</p>
+
+        <figure class="flow glass" id="flow">
+          <svg viewBox="0 0 960 620" role="group" aria-label="แผนผังการทำงาน ชี้หรือแตะแต่ละส่วนเพื่อดูรายละเอียด">
+            <defs>
+              <filter id="slab" x="-15%" y="-20%" width="130%" height="160%" color-interpolation-filters="sRGB">
+                <feOffset in="SourceAlpha" dy="4" result="o"/>
+                <feFlood flood-color="#DDE3E9"/><feComposite in2="o" operator="in" result="edge"/>
+                <feGaussianBlur in="SourceAlpha" stdDeviation="12" result="b"/><feOffset in="b" dy="16" result="bo"/>
+                <feFlood flood-color="#1B2530" flood-opacity="0.12"/><feComposite in2="bo" operator="in" result="shadow"/>
+                <feMerge><feMergeNode in="shadow"/><feMergeNode in="edge"/><feMergeNode in="SourceGraphic"/></feMerge>
+              </filter>
+              <filter id="soft" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="3.5"/></filter>
+              <linearGradient id="g-plate" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#E1E6EB"/></linearGradient>
+              <linearGradient id="g-plate-in" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#EEF1F4"/><stop offset="1" stop-color="#FFFFFF"/></linearGradient>
+              <linearGradient id="g-metal" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#A9B0B3"/><stop offset=".35" stop-color="#F2F3F1"/><stop offset=".7" stop-color="#C5CAC8"/><stop offset="1" stop-color="#8E9599"/></linearGradient>
+              <linearGradient id="g-dark" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2B2F33"/><stop offset=".4" stop-color="#4A5055"/><stop offset="1" stop-color="#24292D"/></linearGradient>
+              <radialGradient id="g-glass" cx=".38" cy=".3" r=".75"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".55" stop-color="#E9EBE8"/><stop offset="1" stop-color="#C3C7C2"/></radialGradient>
+              <radialGradient id="g-glass-on" cx=".42" cy=".36" r=".7"><stop offset="0" stop-color="#FFF9E8"/><stop offset=".5" stop-color="#FFE3A0"/><stop offset="1" stop-color="#EDB250"/></radialGradient>
+              <radialGradient id="g-halo"><stop offset="0" stop-color="#FFE4A6" stop-opacity=".95"/><stop offset=".5" stop-color="#F2BE5C" stop-opacity=".35"/><stop offset="1" stop-color="#F2BE5C" stop-opacity="0"/></radialGradient>
+              <radialGradient id="g-skin" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#EDE6DC"/><stop offset="1" stop-color="#C9BFB2"/></radialGradient>
+              <linearGradient id="g-body" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset="1" stop-color="#C9D3DD"/></linearGradient>
+              <marker id="arrow-live" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#A0582F"/></marker>
+              <marker id="arrow-sig" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#D09A2E"/></marker>
+              <marker id="arrow-audio" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0 0 L10 5 L0 10 Z" fill="#3B76B5"/></marker>
+            </defs>
+
+            <!-- เส้นเชื่อม (วาดก่อนให้อยู่ใต้กล่อง) -->
+            <g class="part link" data-key="ac-relay" tabindex="0" role="button" aria-label="เส้นจากโหลดแรงดันต่ำไปรีเลย์">
+              <path class="hit" d="M220 100 H520"/><path class="live" d="M224 100 H512" marker-end="url(#arrow-live)"/></g>
+            <g class="part link" data-key="relay-lamp" tabindex="0" role="button" aria-label="เส้นจากรีเลย์ไปหลอดไฟ">
+              <path class="hit" d="M720 100 H780"/><path class="live" d="M724 100 H772" marker-end="url(#arrow-live)"/></g>
+            <g class="part link" data-key="arduino-relay" tabindex="0" role="button" aria-label="เส้นจาก ESP32 ไปรีเลย์">
+              <path class="hit" d="M620 430 V185"/><path class="signal" d="M620 426 V194" marker-end="url(#arrow-sig)"/></g>
+            <g class="part link" data-key="voice-mic" tabindex="0" role="button" aria-label="เส้นจากเสียงพูดไปไมโครโฟน">
+              <path class="hit" d="M120 385 V430"/><path class="audio" d="M120 394 V422" marker-end="url(#arrow-audio)"/></g>
+            <g class="part link" data-key="mic-stt" tabindex="0" role="button" aria-label="เส้นจากไมโครโฟนไปหลังบ้าน">
+              <path class="hit" d="M220 510 H270"/><path class="audio" d="M224 510 H263" marker-end="url(#arrow-audio)"/></g>
+            <g class="part link" data-key="stt-arduino" tabindex="0" role="button" aria-label="เส้นจากหลังบ้านไป ESP32">
+              <path class="hit" d="M470 510 H520"/><path class="signal" d="M474 510 H513" marker-end="url(#arrow-sig)"/></g>
+
+            <!-- กล่อง: แผ่นหิน + รูปอุปกรณ์ -->
+            <g class="part node" data-key="ac" tabindex="0" role="button" aria-label="โหลดแรงดันต่ำ">
+              <rect class="tile" x="20" y="20" width="200" height="160" rx="16"/>
+              <g class="art" transform="translate(120 82)"><ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)"/><image href="assets/flow/plug.webp" x="-48.0" y="-48.0" width="96" height="92"/></g>
+              <text x="120" y="148" text-anchor="middle">โหลด DC</text>
+              <text class="sub" x="120" y="169" text-anchor="middle">แรงดันต่ำ</text></g>
+            <g class="part node" data-key="relay" tabindex="0" role="button" aria-label="รีเลย์">
+              <rect class="tile" x="520" y="20" width="200" height="160" rx="16"/>
+              <g class="art" transform="translate(620 82)"><ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)"/><image href="assets/flow/relay.webp" x="-65.0" y="-47.0" width="130" height="90"/></g>
+              <text x="620" y="148" text-anchor="middle">รีเลย์</text>
+              <text class="sub" x="620" y="169" text-anchor="middle">ต่อ / ตัดโหลด DC</text></g>
+            <g class="part node" data-key="lamp" tabindex="0" role="button" aria-label="หลอดไฟบ้าน">
+              <rect class="tile" x="780" y="20" width="160" height="160" rx="16"/>
+              <g class="art" transform="translate(860 82)"><circle class="bulb-halo" cx="0" cy="-12" r="54" fill="url(#g-halo)"/><ellipse cx="0" cy="42" rx="22" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)"/><image href="assets/flow/bulb.webp" x="-40.0" y="-52.0" width="80" height="96"/><image class="bulb-lit" href="assets/flow/bulb-on.webp" x="-40" y="-52" width="80" height="96"/></g>
+              <text x="860" y="148" text-anchor="middle">LED สาธิต</text>
+              <text class="sub" x="860" y="169" text-anchor="middle">โหลดแรงดันต่ำ</text></g>
+            <g class="part node voice" data-key="voice" tabindex="0" role="button" aria-label="คำสั่งเสียง">
+              <rect class="tile" x="20" y="225" width="200" height="160" rx="16"/>
+              <g class="art" transform="translate(120 287)"><g fill="none" stroke="#D09A2E" stroke-width="3.5" stroke-linecap="round"><path d="M50 -24 q10 12 0 24"/><path d="M62 -32 q17 20 0 40" opacity=".6"/></g><image href="assets/flow/person.webp" x="-48" y="-50" width="96" height="92"/></g>
+              <text x="120" y="353" text-anchor="middle">“ตี๋ เปิดไฟ”</text>
+              <text class="sub" x="120" y="374" text-anchor="middle">คำปลุก + คำสั่ง</text></g>
+            <g class="part node" data-key="mic" tabindex="0" role="button" aria-label="ไมโครโฟน">
+              <rect class="tile" x="20" y="430" width="200" height="160" rx="16"/>
+              <g class="art" transform="translate(120 492)"><ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)"/><image href="assets/flow/mic.webp" x="-65.0" y="-47.0" width="130" height="90"/></g>
+              <text x="120" y="558" text-anchor="middle">ไมโครโฟน</text>
+              <text class="sub" x="120" y="579" text-anchor="middle">รับเสียงพูด</text></g>
+            <g class="part node" data-key="stt" tabindex="0" role="button" aria-label="หลังบ้าน Speech-to-Text">
+              <rect class="tile" x="270" y="430" width="200" height="160" rx="16"/>
+              <g class="art" transform="translate(370 492)"><ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)"/><image href="assets/flow/laptop.webp" x="-65.0" y="-52.0" width="130" height="96"/></g>
+              <text x="370" y="558" text-anchor="middle">หลังบ้าน</text>
+              <text class="sub" x="370" y="579" text-anchor="middle">Speech-to-Text</text></g>
+            <g class="part node brain" data-key="arduino" tabindex="0" role="button" aria-label="ESP32">
+              <rect class="tile" x="520" y="430" width="200" height="160" rx="16"/>
+              <g class="art" transform="translate(620 492)"><ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)"/><image href="assets/flow/arduino.webp" x="-68.0" y="-54.0" width="136" height="100"/></g>
+              <text x="620" y="558" text-anchor="middle">ESP32</text>
+              <text class="sub" x="620" y="579" text-anchor="middle">สั่งรีเลย์</text></g>
+          </svg>
+          <figcaption class="legend">
+            <span class="l-live">โหลดแรงดันต่ำ</span>
+            <span class="l-audio">เสียง</span>
+            <span class="l-sig">สัญญาณควบคุม</span>
+            <span class="legend-hint">ชี้หรือแตะที่กล่องหรือเส้นเพื่อดูคำอธิบาย</span>
+          </figcaption>
+        </figure>
+
+        <ol class="steps">
+          <li><span>ผู้ใช้พูดคำปลุก “ตี๋” แล้วต่อด้วย “เปิด” หรือ “ปิด”</span></li>
+          <li><span>ไมโครโฟนส่งเสียงให้หลังบ้าน ซึ่งแปลงเสียงเป็นข้อความด้วย Speech-to-Text</span></li>
+          <li><span>หลังบ้านเช็กคำว่า “ตี๋” และคำสั่ง แล้วส่ง JSON command ผ่าน Wi-Fi ให้ ESP32 ถ้าไม่มีคำปลุกหรือคำสั่งไม่ชัดเจนจะไม่ทำอะไร</span></li>
+          <li><span>ESP32 ตรวจสอบคำตอบที่ accepted แล้วสั่ง RelayController ตาม intent ที่อนุญาต</span></li>
+          <li><span>RelayController ควบคุม LED หรือโหลด DC แรงดันต่ำสำหรับการทดสอบ</span></li>
+        </ol>
+      </div>
+    </section>
+
+    <!-- ===================== PARTS ===================== -->
+    <section class="block" id="parts">
+      <div class="wrap">
+        <h2>อุปกรณ์ที่ใช้</h2>
+        <!-- TODO: เพิ่ม/ลบรายการให้ครบ -->
+        <ul class="part-grid">
+          <li class="part-card glass">
+            <img src="assets/icons/arduino.webp" width="120" height="120" alt="">
+            <h3>ESP32 DevKit V1</h3>
+            <p>รับคำสั่งจาก backend แล้วสั่งรีเลย์</p>
+            <span class="qty">× 1</span>
+          </li>
+          <li class="part-card glass">
+            <img src="assets/icons/mic.webp" width="120" height="120" alt="">
+            <h3>ไมโครโฟน</h3>
+            <p>รับเสียงพูดของผู้ใช้</p>
+            <span class="qty">× 1</span>
+          </li>
+          <li class="part-card glass">
+            <img src="assets/icons/computer.webp" width="120" height="120" alt="">
+            <h3>คอมพิวเตอร์ (หลังบ้าน)</h3>
+            <p>แปลงเสียงเป็นข้อความ เช็กคำปลุก แล้วส่ง JSON command ให้ ESP32</p>
+            <span class="qty">× 1</span>
+          </li>
+          <li class="part-card glass">
+            <img src="assets/icons/relay.webp" width="120" height="120" alt="">
+            <h3>โมดูลรีเลย์ 5V</h3>
+            <p>ควบคุม LED หรือโหลด DC แรงดันต่ำสำหรับการทดสอบ</p>
+            <span class="qty">× 1</span>
+          </li>
+          <li class="part-card glass">
+            <img src="assets/icons/bulb.webp" width="120" height="120" alt="">
+            <h3>LED หรือโหลด DC</h3>
+            <p>โหลดแรงดันต่ำสำหรับการทดสอบ</p>
+            <span class="qty">× 1</span>
+          </li>
+          <li class="part-card glass">
+            <img src="assets/icons/power.webp" width="120" height="120" alt="">
+            <h3>LCD 16x2 I2C</h3>
+            <p>แสดงสถานะระบบแบบ optional</p>
+            <span class="qty">× 1 ชุด</span>
+          </li>
+          <li class="part-card glass">
+            <img src="assets/icons/jumper.webp" width="120" height="120" alt="">
+            <h3>สายจัมเปอร์ / บอร์ดทดลอง</h3>
+            <p>ต่ออุปกรณ์แรงดันต่ำกับ ESP32</p>
+            <span class="qty">× 1 ชุด</span>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ===================== SAFETY ===================== -->
+    <!-- <section class="block safety" id="safety">
+      <div class="wrap">
+        <h2>ความปลอดภัย</h2>
+        <p>การทดสอบในโครงการนี้จำกัดอยู่ที่วงจรแรงดันต่ำเท่านั้น ห้ามต่อไฟบ้านหรือสายไฟเปลือยเข้ากับ relay module หรือ breadboard</p>
+        <ul>
+          <li>ใช้ LED หรือโหลด DC แรงดันต่ำเท่านั้น</li>
+          <li>ห้ามจ่าย 5V เข้าขา GPIO ของ ESP32</li>
+          <li>หากติดตั้งโหลดไฟบ้าน ต้องใช้อุปกรณ์หุ้มป้องกันที่ได้มาตรฐานและช่างไฟฟ้าที่มีคุณสมบัติ</li>
+        </ul>
+      </div>
+    </section> -->
+
+    <!-- ===================== TEAM ===================== -->
+    <section class="block" id="team">
+      <div class="wrap">
+        <h2>ทีมของเรา</h2>
+        <!-- TODO: ใส่ชื่อจริง / เปลี่ยนรูปเป็นรูปสมาชิกได้ที่ <img src="..."> ใน .avatar -->
+        <ul class="team">
+          <li class="glass">
+            <div class="avatar"><img src="assets/icons/person.webp" width="120" height="120" alt=""></div>
+            <div class="name">อั้ม</div><div class="meta">หัวหน้าทีม<br>68070013</div></li>
+          <li class="glass">
+            <div class="avatar"><img src="assets/icons/person.webp" width="120" height="120" alt=""></div>
+            <div class="name">จิร</div><div class="meta">เขียนโค้ด<br>68070014</div></li>
+          <li class="glass">
+            <div class="avatar"><img src="assets/icons/person.webp" width="120" height="120" alt=""></div>
+            <div class="name">ชื่อ นามสกุล</div><div class="meta">ต่อวงจร<br>68070006</div></li>
+          <li class="glass">
+            <div class="avatar"><img src="assets/icons/person.webp" width="120" height="120" alt=""></div>
+            <div class="name">ชื่อ นามสกุล</div><div class="meta">ออกแบบชิ้นงาน<br>68070021</div></li>
+          <li class="glass">
+            <div class="avatar"><img src="assets/icons/person.webp" width="120" height="120" alt=""></div>
+            <div class="name">ชื่อ นามสกุล</div><div class="meta">เอกสาร / พรีเซนต์<br>68070043</div></li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <div class="tip" id="tip" role="tooltip"></div>
+
+  <footer>
+    <div class="wrap">
+      <p>LANTERN — วิชา Physical Computing ภาคเรียนที่ 1/2569</p>
+      <p class="credit">รูปอุปกรณ์จาก Wikimedia Commons (CC BY-SA / Free Art License / CC0 / public domain) และ 3dicons.co (CC0) ดูรายชื่อผู้สร้างใน <a href="https://github.com/weloveptae/lantern#เครดิตรูปภาพ">README</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const hero = document.getElementById("hero");
+    const lamp = document.getElementById("lamp");
+    const lampHint = lamp.querySelector(".lamp-hint");
+    const mic = document.getElementById("mic");
+    const heard = document.getElementById("heard");
+    const hint = document.getElementById("voice-hint");
+
+    function setLamp(on) {
+      hero.classList.toggle("is-on", on);
+      lamp.setAttribute("aria-pressed", on);
+      lampHint.textContent = on ? "แตะหลอดเพื่อปิดไฟ" : "แตะหลอดเพื่อเปิดไฟ";
+    }
+
+    lamp.addEventListener("click", () => setLamp(!hero.classList.contains("is-on")));
+    lamp.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setLamp(!hero.classList.contains("is-on")); }
+    });
+
+    // ---------- แผนผังการทำงาน: คำอธิบายสั้นๆ ตอนชี้เมาส์ ----------
+    const PARTS = {
+      voice: ["เสียงพูดสดๆ", "พูดว่า “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ” ใส่ไมค์ได้เลย"],
+      mic: ["ไมโครโฟน", "รับเสียงพูด แล้วส่งเข้าคอมพิวเตอร์"],
+      stt: ["หลังบ้าน", "แปลงเสียงเป็นข้อความ แล้วหาแค่ 3 คำ: “ตี๋” “เปิด” “ปิด”"],
+      arduino: ["ESP32", "รับคำสั่งจาก backend แล้วสั่งรีเลย์เปิดหรือปิด"],
+      relay: ["รีเลย์", "ควบคุม LED หรือโหลด DC แรงดันต่ำ"],
+      ac: ["โหลด DC", "โหลดแรงดันต่ำสำหรับการทดสอบ"],
+      lamp: ["LED สาธิต", "ติดเมื่อรีเลย์ต่อไฟ ดับเมื่อรีเลย์ตัดไฟ"],
+      "voice-mic": ["ผู้ใช้ → ไมค์", "เสียงพูดเข้าไมค์"],
+      "mic-stt": ["ไมค์ → หลังบ้าน", "ส่งเสียงเข้าคอมพิวเตอร์"],
+      "stt-arduino": ["หลังบ้าน → ESP32", "ได้ยิน “ตี๋ เปิด” หรือ “ตี๋ ปิด” แล้วส่ง JSON command ทาง Wi-Fi"],
+      "arduino-relay": ["ESP32 → รีเลย์", "สั่ง GPIO ตามคำสั่งที่ backend ยอมรับ"],
+      "ac-relay": ["โหลด DC → รีเลย์", "ใช้โหลดแรงดันต่ำสำหรับการทดสอบเท่านั้น"],
+      "relay-lamp": ["รีเลย์ → LED", "รีเลย์ต่อหรือปลดโหลด LED สาธิต"],
+    };
+
+    const flow = document.getElementById("flow");
+    const tip = document.getElementById("tip");
+
+    function placeTip(x, y) {
+      const pad = 12, w = tip.offsetWidth, h = tip.offsetHeight;
+      let left = x + 16, top = y + 18;
+      if (left + w > innerWidth - pad) left = x - w - 16;
+      if (top + h > innerHeight - pad) top = y - h - 14;
+      tip.style.transform = `translate(${Math.max(pad, left)}px, ${Math.max(pad, top)}px)`;
+    }
+
+    function showPart(el, x, y) {
+      const d = PARTS[el.dataset.key];
+      if (!d) return;
+      flow.querySelectorAll(".part.is-active").forEach((p) => p.classList.remove("is-active"));
+      el.classList.add("is-active");
+      flow.classList.add("has-active");
+      tip.innerHTML = "";
+      const title = document.createElement("strong");
+      title.textContent = d[0];
+      tip.append(title, d[1]);
+      if (x === undefined) {
+        const b = el.getBoundingClientRect();
+        x = b.left + b.width / 2; y = b.bottom - 6;
+      }
+      placeTip(x, y);
+      tip.classList.add("is-shown");
+    }
+
+    function hideTip() {
+      flow.classList.remove("has-active");
+      flow.querySelectorAll(".part.is-active").forEach((p) => p.classList.remove("is-active"));
+      tip.classList.remove("is-shown");
+    }
+
+    flow.querySelectorAll(".part").forEach((el) => {
+      el.addEventListener("mouseenter", (e) => showPart(el, e.clientX, e.clientY));
+      el.addEventListener("mousemove", (e) => placeTip(e.clientX, e.clientY));
+      el.addEventListener("mouseleave", hideTip);
+      el.addEventListener("focus", () => showPart(el));
+      el.addEventListener("blur", hideTip);
+      el.addEventListener("click", (e) => { e.stopPropagation(); showPart(el, e.clientX, e.clientY); });
+    });
+    document.addEventListener("click", hideTip);
+    addEventListener("scroll", hideTip, { passive: true });
+
+    // ใช้ "เปิด" ก่อน "ปิด" เพราะคำว่า "เปิด" มี "ปิด" อยู่ข้างใน
+    function handleCommand(text) {
+      heard.textContent = "“" + text + "”";
+      if (!/ตี๋/.test(text)) { hint.textContent = "ขึ้นต้นด้วยคำปลุก “ตี๋” ก่อน เช่น “ตี๋ เปิดไฟ”"; return; }
+      text = text.split("ตี๋").pop();
+      if (/เปิด/.test(text)) { setLamp(true);  hint.textContent = "ไฟติดแล้ว"; }
+      else if (/ปิด/.test(text)) { setLamp(false); hint.textContent = "ไฟดับแล้ว"; }
+      else { hint.textContent = "ไม่รู้จักคำสั่งนี้ ลองพูดว่า “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”"; }
+    }
+
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!mic) {
+      // ไม่มีปุ่มไมค์ในหน้า: เปิด-ปิดไฟได้ด้วยการคลิกหลอดอย่างเดียว
+    } else if (!Recognition) {
+      // เบราว์เซอร์ไม่รองรับการฟังเสียง ให้ปุ่มไมค์ใช้สลับไฟแทน
+      heard.textContent = "กดไมค์เพื่อเปิด-ปิดไฟ";
+      hint.textContent = "เบราว์เซอร์นี้ฟังเสียงไม่ได้ ใช้ Chrome เพื่อสั่งด้วยเสียง";
+      mic.addEventListener("click", () => {
+        const on = !hero.classList.contains("is-on");
+        setLamp(on);
+        heard.textContent = on ? "“เปิดไฟ”" : "“ปิดไฟ”";
+      });
+    } else {
+      const rec = new Recognition();
+      rec.lang = "th-TH";
+      rec.interimResults = false;
+
+      rec.onstart = () => {
+        mic.setAttribute("aria-pressed", "true");
+        heard.textContent = "กำลังฟัง…";
+        hint.textContent = "พูดว่า “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”";
+      };
+      rec.onend = () => mic.setAttribute("aria-pressed", "false");
+      rec.onresult = (e) => handleCommand(e.results[0][0].transcript.trim());
+      rec.onerror = (e) => {
+        heard.textContent = "กดไมค์แล้วพูดได้เลย";
+        hint.textContent = e.error === "not-allowed"
+          ? "ต้องอนุญาตให้ใช้ไมค์ก่อน (เปิดผ่าน https หรือ localhost)"
+          : "ไม่ได้ยินคำสั่ง ลองกดไมค์แล้วพูดใหม่";
+      };
+
+      mic.addEventListener("click", () => {
+        if (mic.getAttribute("aria-pressed") === "true") rec.stop();
+        else rec.start();
+      });
+    }
+  </script>
+</body>
 </html>
