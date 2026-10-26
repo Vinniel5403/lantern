@@ -7,6 +7,14 @@
 
 class UtteranceSegmenter {
  public:
+  enum class CompletionReason : uint8_t {
+    kNone,
+    kSilenceTimeout,
+    kMaximumDuration,
+    kManualFlush,
+    kStorageError,
+  };
+
   bool begin();
   void reset();
   bool processFrame(const int16_t* samples, size_t sample_count, bool speech);
@@ -15,6 +23,10 @@ class UtteranceSegmenter {
   bool active() const { return recording_; }
   const char* pcmPath() const { return kPcmPath; }
   size_t sampleCount() const { return utterance_sample_count_; }
+  uint16_t recordingMs() const { return recording_ms_; }
+  uint16_t silenceMs() const { return silence_ms_; }
+  CompletionReason completionReason() const { return completion_reason_; }
+  const char* completionReasonName() const;
 
  private:
   static constexpr const char* kPcmPath = "/lantern_utterance.pcm";
@@ -37,4 +49,5 @@ class UtteranceSegmenter {
   uint16_t silence_ms_ = 0;
   uint16_t recording_ms_ = 0;
   bool recording_ = false;
+  CompletionReason completion_reason_ = CompletionReason::kNone;
 };
