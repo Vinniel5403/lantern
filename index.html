@@ -1193,14 +1193,15 @@
             <article class="glass doc-card abstract-card" id="abstract-th">
               <h3>บทคัดย่อ</h3>
               <p>
-                Lantern เป็นต้นแบบระบบสั่งงานอุปกรณ์ด้วยเสียงภาษาไทยแบบ hands-free
-                ใช้ ESP32, INMP441, LCD 16x2 I2C, LED และรีเลย์แรงดันต่ำ
-                โดยใช้ FastAPI และ Typhoon ASR รุ่น <code>typhoon-asr-realtime</code>
+                Lantern เป็นต้นแบบระบบสั่งงานอุปกรณ์ด้วยเสียงภาษาไทยแบบ
+                hands-free ใช้ ESP32, INMP441, LCD 16x2 I2C, LED
+                และรีเลย์แรงดันต่ำ โดยใช้ FastAPI และ Typhoon ASR รุ่น
+                <code>typhoon-asr-realtime</code>
               </p>
               <p>
                 ESP32 รับเสียง mono 16 kHz ผ่าน I2S ใช้ VAD แบ่งเสียงเป็นช่วง
-                แล้วส่งไฟล์ WAV แบบ PCM16 ด้วย HTTP POST ไปยัง backend
-                Backend เรียก ASR ตรวจคำปลุก “ตี๋” และอนุญาตคำสั่ง
+                แล้วส่งไฟล์ WAV แบบ PCM16 ด้วย HTTP POST ไปยัง backend Backend
+                เรียก ASR ตรวจคำปลุก “ตี๋” และอนุญาตคำสั่ง
                 <code>LIGHT_ON</code> หรือ <code>LIGHT_OFF</code>
               </p>
               <p>
@@ -1217,8 +1218,8 @@
         <div class="wrap">
           <h2>การทำงาน</h2>
           <p>
-            ระบบใช้ INMP441, ESP32, LCD, FastAPI และรีเลย์แรงดันต่ำ
-            สำหรับควบคุม LED หรือโหลด DC เท่านั้น
+            ระบบใช้ INMP441, ESP32, LCD, FastAPI และรีเลย์แรงดันต่ำ สำหรับควบคุม
+            LED หรือโหลด DC เท่านั้น
           </p>
           <p class="muted">
             ESP32 ส่ง WAV ผ่าน Wi-Fi ไปยัง FastAPI ที่ <code>0.0.0.0:8000</code>
@@ -1339,149 +1340,544 @@
               </defs>
 
               <!-- เส้นเชื่อม (วาดก่อนให้อยู่ใต้กล่อง) -->
-              <g class="part link" data-key="voice-mic" tabindex="0" role="button" aria-label="เส้นจากเสียงพูดไปไมโครโฟน">
+              <g
+                class="part link"
+                data-key="voice-mic"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจากเสียงพูดไปไมโครโฟน"
+              >
                 <path class="hit" d="M140 180 V225" />
-                <path class="audio" d="M140 186 V216" marker-end="url(#arrow-audio)" />
+                <path
+                  class="audio"
+                  d="M140 186 V216"
+                  marker-end="url(#arrow-audio)"
+                />
               </g>
-              <g class="part link" data-key="mic-arduino" tabindex="0" role="button" aria-label="เส้นจากไมโครโฟนไป ESP32">
+              <g
+                class="part link"
+                data-key="mic-arduino"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจากไมโครโฟนไป ESP32"
+              >
                 <path class="hit" d="M260 305 H360" />
-                <path class="audio" d="M266 305 H351" marker-end="url(#arrow-audio)" />
+                <path
+                  class="audio"
+                  d="M266 305 H351"
+                  marker-end="url(#arrow-audio)"
+                />
               </g>
-              <g class="part link" data-key="arduino-stt" tabindex="0" role="button" aria-label="เส้นจาก ESP32 ไปหลังบ้าน">
+              <g
+                class="part link"
+                data-key="arduino-stt"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจาก ESP32 ไปหลังบ้าน"
+              >
                 <path class="hit" d="M450 225 V180" />
-                <path class="audio" d="M450 219 V189" marker-end="url(#arrow-audio)" />
+                <path
+                  class="audio"
+                  d="M450 219 V189"
+                  marker-end="url(#arrow-audio)"
+                />
               </g>
-              <g class="part link" data-key="stt-arduino" tabindex="0" role="button" aria-label="เส้นจากหลังบ้านกลับมา ESP32">
+              <g
+                class="part link"
+                data-key="stt-arduino"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจากหลังบ้านกลับมา ESP32"
+              >
                 <path class="hit" d="M510 180 V225" />
-                <path class="signal" d="M510 186 V216" marker-end="url(#arrow-sig)" />
+                <path
+                  class="signal"
+                  d="M510 186 V216"
+                  marker-end="url(#arrow-sig)"
+                />
               </g>
-              <g class="part link" data-key="arduino-relay" tabindex="0" role="button" aria-label="เส้นจาก ESP32 ไปรีเลย์">
+              <g
+                class="part link"
+                data-key="arduino-relay"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจาก ESP32 ไปรีเลย์"
+              >
                 <path class="hit" d="M600 305 H700" />
-                <path class="signal" d="M606 305 H691" marker-end="url(#arrow-sig)" />
+                <path
+                  class="signal"
+                  d="M606 305 H691"
+                  marker-end="url(#arrow-sig)"
+                />
               </g>
-              <g class="part link" data-key="ac-relay" tabindex="0" role="button" aria-label="เส้นจากแหล่งจ่าย DC ไปรีเลย์">
+              <g
+                class="part link"
+                data-key="ac-relay"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจากแหล่งจ่าย DC ไปรีเลย์"
+              >
                 <path class="hit" d="M820 180 V225" />
-                <path class="live" d="M820 186 V214" marker-end="url(#arrow-live)" />
+                <path
+                  class="live"
+                  d="M820 186 V214"
+                  marker-end="url(#arrow-live)"
+                />
               </g>
-              <g class="part link" data-key="relay-lamp" tabindex="0" role="button" aria-label="เส้นจากรีเลย์ไปโหลด DC">
+              <g
+                class="part link"
+                data-key="relay-lamp"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจากรีเลย์ไปโหลด DC"
+              >
                 <path class="hit" d="M820 385 V430" />
-                <path class="live" d="M820 391 V419" marker-end="url(#arrow-live)" />
+                <path
+                  class="live"
+                  d="M820 391 V419"
+                  marker-end="url(#arrow-live)"
+                />
               </g>
-              <g class="part link" data-key="arduino-lcd" tabindex="0" role="button" aria-label="เส้นจาก ESP32 ไปจอ LCD">
+              <g
+                class="part link"
+                data-key="arduino-lcd"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจาก ESP32 ไปจอ LCD"
+              >
                 <path class="hit" d="M480 385 V430" />
-                <path class="signal" d="M480 391 V421" marker-end="url(#arrow-sig)" />
+                <path
+                  class="signal"
+                  d="M480 391 V421"
+                  marker-end="url(#arrow-sig)"
+                />
               </g>
-              <g class="part link" data-key="arduino-led" tabindex="0" role="button" aria-label="เส้นจาก ESP32 ไป LED สถานะ">
+              <g
+                class="part link"
+                data-key="arduino-led"
+                tabindex="0"
+                role="button"
+                aria-label="เส้นจาก ESP32 ไป LED สถานะ"
+              >
                 <path class="hit" d="M400 385 V407 H140 V430" />
-                <path class="signal" d="M400 391 V407 H140 V421" marker-end="url(#arrow-sig)" />
+                <path
+                  class="signal"
+                  d="M400 391 V407 H140 V421"
+                  marker-end="url(#arrow-sig)"
+                />
               </g>
 
               <!-- กล่อง: แผ่นหิน + รูปอุปกรณ์ -->
-              <g class="part node voice" data-key="voice" tabindex="0" role="button" aria-label="คำสั่งเสียง">
-                <rect class="tile" x="20" y="20" width="240" height="160" rx="16" />
+              <g
+                class="part node voice"
+                data-key="voice"
+                tabindex="0"
+                role="button"
+                aria-label="คำสั่งเสียง"
+              >
+                <rect
+                  class="tile"
+                  x="20"
+                  y="20"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(140 82)">
-                  <g fill="none" stroke="#D09A2E" stroke-width="3.5" stroke-linecap="round">
+                  <g
+                    fill="none"
+                    stroke="#D09A2E"
+                    stroke-width="3.5"
+                    stroke-linecap="round"
+                  >
                     <path d="M50 -24 q10 12 0 24" />
                     <path d="M62 -32 q17 20 0 40" opacity=".6" />
                   </g>
-                  <image href="assets/flow/person.webp" x="-48" y="-50" width="96" height="92" />
+                  <image
+                    href="assets/flow/person.webp"
+                    x="-48"
+                    y="-50"
+                    width="96"
+                    height="92"
+                  />
                 </g>
                 <text x="140" y="148" text-anchor="middle">“ตี๋ เปิดไฟ”</text>
-                <text class="sub" x="140" y="169" text-anchor="middle">คำปลุก + คำสั่ง</text>
+                <text class="sub" x="140" y="169" text-anchor="middle">
+                  คำปลุก + คำสั่ง
+                </text>
               </g>
-              <g class="part node" data-key="stt" tabindex="0" role="button" aria-label="หลังบ้าน Speech-to-Text">
-                <rect class="tile" x="360" y="20" width="240" height="160" rx="16" />
+              <g
+                class="part node"
+                data-key="stt"
+                tabindex="0"
+                role="button"
+                aria-label="หลังบ้าน Speech-to-Text"
+              >
+                <rect
+                  class="tile"
+                  x="360"
+                  y="20"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(480 82)">
-                  <ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/flow/laptop.webp" x="-65" y="-52" width="130" height="96" />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="46"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
+                  <image
+                    href="assets/flow/laptop.webp"
+                    x="-65"
+                    y="-52"
+                    width="130"
+                    height="96"
+                  />
                 </g>
-                <text x="480" y="148" text-anchor="middle">หลังบ้าน (FastAPI)</text>
-                <text class="sub" x="480" y="169" text-anchor="middle">Speech-to-Text</text>
+                <text x="480" y="148" text-anchor="middle">
+                  หลังบ้าน (FastAPI)
+                </text>
+                <text class="sub" x="480" y="169" text-anchor="middle">
+                  Speech-to-Text
+                </text>
               </g>
-              <g class="part node" data-key="ac" tabindex="0" role="button" aria-label="แหล่งจ่าย DC แรงดันต่ำ">
-                <rect class="tile" x="700" y="20" width="240" height="160" rx="16" />
+              <g
+                class="part node"
+                data-key="ac"
+                tabindex="0"
+                role="button"
+                aria-label="แหล่งจ่าย DC แรงดันต่ำ"
+              >
+                <rect
+                  class="tile"
+                  x="700"
+                  y="20"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(820 82)">
-                  <ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/flow/plug.webp" x="-48" y="-48" width="96" height="92" />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="46"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
+                  <image
+                    href="assets/flow/plug.webp"
+                    x="-48"
+                    y="-48"
+                    width="96"
+                    height="92"
+                  />
                 </g>
                 <text x="820" y="148" text-anchor="middle">แหล่งจ่าย DC</text>
-                <text class="sub" x="820" y="169" text-anchor="middle">แรงดันต่ำเท่านั้น</text>
+                <text class="sub" x="820" y="169" text-anchor="middle">
+                  แรงดันต่ำเท่านั้น
+                </text>
               </g>
-              <g class="part node" data-key="mic" tabindex="0" role="button" aria-label="ไมโครโฟน INMP441">
-                <rect class="tile" x="20" y="225" width="240" height="160" rx="16" />
+              <g
+                class="part node"
+                data-key="mic"
+                tabindex="0"
+                role="button"
+                aria-label="ไมโครโฟน INMP441"
+              >
+                <rect
+                  class="tile"
+                  x="20"
+                  y="225"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(140 287)">
-                  <ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/icons/e1up4n.jpg" x="-65" y="-47" width="130" height="90" />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="46"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
+                  <image
+                    href="assets/icons/e1up4n.jpg"
+                    x="-65"
+                    y="-47"
+                    width="130"
+                    height="90"
+                  />
                 </g>
                 <text x="140" y="353" text-anchor="middle">ไมค์ INMP441</text>
-                <text class="sub" x="140" y="374" text-anchor="middle">แปลงเสียงเป็นดิจิทัล</text>
+                <text class="sub" x="140" y="374" text-anchor="middle">
+                  แปลงเสียงเป็นดิจิทัล
+                </text>
               </g>
-              <g class="part node brain" data-key="arduino" tabindex="0" role="button" aria-label="ESP32">
-                <rect class="tile" x="360" y="225" width="240" height="160" rx="16" />
+              <g
+                class="part node brain"
+                data-key="arduino"
+                tabindex="0"
+                role="button"
+                aria-label="ESP32"
+              >
+                <rect
+                  class="tile"
+                  x="360"
+                  y="225"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(480 287)">
-                  <ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/esp32-product-transparent.png" x="-68" y="-54" width="136" height="100" preserveAspectRatio="xMidYMid meet" />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="46"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
+                  <image
+                    href="assets/esp32-product-transparent.png"
+                    x="-68"
+                    y="-54"
+                    width="136"
+                    height="100"
+                    preserveAspectRatio="xMidYMid meet"
+                  />
                 </g>
-                <text x="480" y="353" text-anchor="middle">ESP32 DevKit V1</text>
-                <text class="sub" x="480" y="374" text-anchor="middle">ตัวควบคุมหลัก</text>
+                <text x="480" y="353" text-anchor="middle">
+                  ESP32 DevKit V1
+                </text>
+                <text class="sub" x="480" y="374" text-anchor="middle">
+                  ตัวควบคุมหลัก
+                </text>
               </g>
-              <g class="part node" data-key="relay" tabindex="0" role="button" aria-label="รีเลย์">
-                <rect class="tile" x="700" y="225" width="240" height="160" rx="16" />
+              <g
+                class="part node"
+                data-key="relay"
+                tabindex="0"
+                role="button"
+                aria-label="รีเลย์"
+              >
+                <rect
+                  class="tile"
+                  x="700"
+                  y="225"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(820 287)">
-                  <ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/flow/relay.webp" x="-65" y="-47" width="130" height="90" />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="46"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
+                  <image
+                    href="assets/flow/relay.webp"
+                    x="-65"
+                    y="-47"
+                    width="130"
+                    height="90"
+                  />
                 </g>
                 <text x="820" y="353" text-anchor="middle">รีเลย์ 5V</text>
-                <text class="sub" x="820" y="374" text-anchor="middle">ต่อ / ตัดโหลด DC</text>
+                <text class="sub" x="820" y="374" text-anchor="middle">
+                  ต่อ / ตัดโหลด DC
+                </text>
               </g>
-              <g class="part node" data-key="led" tabindex="0" role="button" aria-label="LED แสดงสถานะ">
-                <rect class="tile" x="20" y="430" width="240" height="160" rx="16" />
+              <g
+                class="part node"
+                data-key="led"
+                tabindex="0"
+                role="button"
+                aria-label="LED แสดงสถานะ"
+              >
+                <rect
+                  class="tile"
+                  x="20"
+                  y="430"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(140 492)">
-                  <ellipse cx="0" cy="42" rx="24" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="24"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
                   <g stroke="#9AA1A6" stroke-width="3" stroke-linecap="round">
                     <path d="M-6 14 V40" />
                     <path d="M6 14 V34" />
                   </g>
-                  <rect x="-20" y="8" width="40" height="7" rx="2" fill="#B8352D" />
-                  <path d="M-16 9 V-16 A16 16 0 0 1 16 -16 V9 Z" fill="#E5483F" />
-                  <path d="M-9 -16 A9 9 0 0 1 0 -26" fill="none" stroke="#FFD2CC" stroke-width="3" stroke-linecap="round" />
+                  <rect
+                    x="-20"
+                    y="8"
+                    width="40"
+                    height="7"
+                    rx="2"
+                    fill="#B8352D"
+                  />
+                  <path
+                    d="M-16 9 V-16 A16 16 0 0 1 16 -16 V9 Z"
+                    fill="#E5483F"
+                  />
+                  <path
+                    d="M-9 -16 A9 9 0 0 1 0 -26"
+                    fill="none"
+                    stroke="#FFD2CC"
+                    stroke-width="3"
+                    stroke-linecap="round"
+                  />
                 </g>
                 <text x="140" y="558" text-anchor="middle">LED สถานะ</text>
-                <text class="sub" x="140" y="579" text-anchor="middle">ติด / ดับตามคำสั่ง</text>
+                <text class="sub" x="140" y="579" text-anchor="middle">
+                  ติด / ดับตามคำสั่ง
+                </text>
               </g>
-              <g class="part node" data-key="lcd" tabindex="0" role="button" aria-label="จอ LCD 16x2">
-                <rect class="tile" x="360" y="430" width="240" height="160" rx="16" />
+              <g
+                class="part node"
+                data-key="lcd"
+                tabindex="0"
+                role="button"
+                aria-label="จอ LCD 16x2"
+              >
+                <rect
+                  class="tile"
+                  x="360"
+                  y="430"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(480 492)">
-                  <ellipse cx="0" cy="42" rx="60" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/lcd-product-transparent.png" x="-68" y="-48" width="136" height="94" preserveAspectRatio="xMidYMid meet" />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="60"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
+                  <image
+                    href="assets/lcd-product-transparent.png"
+                    x="-68"
+                    y="-48"
+                    width="136"
+                    height="94"
+                    preserveAspectRatio="xMidYMid meet"
+                  />
                 </g>
                 <text x="480" y="558" text-anchor="middle">จอ LCD 16x2</text>
-                <text class="sub" x="480" y="579" text-anchor="middle">แสดงสถานะระบบ</text>
+                <text class="sub" x="480" y="579" text-anchor="middle">
+                  แสดงสถานะระบบ
+                </text>
               </g>
-              <g class="part node" data-key="lamp" tabindex="0" role="button" aria-label="โหลด DC">
-                <rect class="tile" x="700" y="430" width="240" height="160" rx="16" />
+              <g
+                class="part node"
+                data-key="lamp"
+                tabindex="0"
+                role="button"
+                aria-label="โหลด DC"
+              >
+                <rect
+                  class="tile"
+                  x="700"
+                  y="430"
+                  width="240"
+                  height="160"
+                  rx="16"
+                />
                 <g class="art" transform="translate(820 492)">
-                  <circle class="bulb-halo" cx="0" cy="-12" r="54" fill="url(#g-halo)" />
-                  <ellipse cx="0" cy="42" rx="22" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/flow/bulb.webp" x="-40" y="-52" width="80" height="96" />
-                  <image class="bulb-lit" href="assets/flow/bulb-on.webp" x="-40" y="-52" width="80" height="96" />
+                  <circle
+                    class="bulb-halo"
+                    cx="0"
+                    cy="-12"
+                    r="54"
+                    fill="url(#g-halo)"
+                  />
+                  <ellipse
+                    cx="0"
+                    cy="42"
+                    rx="22"
+                    ry="6"
+                    fill="#1B2530"
+                    opacity=".16"
+                    filter="url(#soft)"
+                  />
+                  <image
+                    href="assets/flow/bulb.webp"
+                    x="-40"
+                    y="-52"
+                    width="80"
+                    height="96"
+                  />
+                  <image
+                    class="bulb-lit"
+                    href="assets/flow/bulb-on.webp"
+                    x="-40"
+                    y="-52"
+                    width="80"
+                    height="96"
+                  />
                 </g>
                 <text x="820" y="558" text-anchor="middle">โหลด DC</text>
-                <text class="sub" x="820" y="579" text-anchor="middle">LED สาธิต</text>
+                <text class="sub" x="820" y="579" text-anchor="middle">
+                  LED สาธิต
+                </text>
               </g>
 
               <!-- ลำดับขั้นและชื่อสัญญาณ -->
               <g class="flow-marks" aria-hidden="true">
-                <g transform="translate(166 203)"><circle r="11" /><text y="4.5" text-anchor="middle">1</text></g>
-                <g transform="translate(310 326)"><circle r="11" /><text y="4.5" text-anchor="middle">2</text></g>
+                <g transform="translate(166 203)">
+                  <circle r="11" />
+                  <text y="4.5" text-anchor="middle">1</text>
+                </g>
+                <g transform="translate(310 326)">
+                  <circle r="11" />
+                  <text y="4.5" text-anchor="middle">2</text>
+                </g>
                 <text x="310" y="293" text-anchor="middle">I2S</text>
-                <g transform="translate(424 203)"><circle r="11" /><text y="4.5" text-anchor="middle">3</text></g>
+                <g transform="translate(424 203)">
+                  <circle r="11" />
+                  <text y="4.5" text-anchor="middle">3</text>
+                </g>
                 <text x="406" y="207" text-anchor="end">เสียง</text>
-                <g transform="translate(536 203)"><circle r="11" /><text y="4.5" text-anchor="middle">4</text></g>
+                <g transform="translate(536 203)">
+                  <circle r="11" />
+                  <text y="4.5" text-anchor="middle">4</text>
+                </g>
                 <text x="554" y="207" text-anchor="start">JSON</text>
-                <g transform="translate(650 326)"><circle r="11" /><text y="4.5" text-anchor="middle">5</text></g>
+                <g transform="translate(650 326)">
+                  <circle r="11" />
+                  <text y="4.5" text-anchor="middle">5</text>
+                </g>
                 <text x="650" y="293" text-anchor="middle">GPIO23</text>
-                <g transform="translate(846 408)"><circle r="11" /><text y="4.5" text-anchor="middle">6</text></g>
+                <g transform="translate(846 408)">
+                  <circle r="11" />
+                  <text y="4.5" text-anchor="middle">6</text>
+                </g>
                 <text x="864" y="412" text-anchor="start">COM / NO</text>
                 <text x="494" y="412" text-anchor="start">I2C</text>
                 <text x="270" y="400" text-anchor="middle">GPIO17</text>
@@ -1492,7 +1888,8 @@
               <span class="l-sig">สัญญาณควบคุม / ข้อมูล</span>
               <span class="l-live">ไฟเลี้ยงโหลด DC แรงดันต่ำ</span>
               <span class="legend-hint"
-                >ตัวเลขบนเส้นคือลำดับขั้นด้านล่าง ชี้หรือแตะเพื่อดูคำอธิบาย</span
+                >ตัวเลขบนเส้นคือลำดับขั้นด้านล่าง
+                ชี้หรือแตะเพื่อดูคำอธิบาย</span
               >
             </figcaption>
           </figure>
@@ -1502,22 +1899,19 @@
               <span>พูด “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”</span>
             </li>
             <li>
-              <span>ไมค์ INMP441 แปลงเสียงเป็นสัญญาณดิจิทัล ส่งเข้า ESP32 ผ่าน I2S</span>
-            </li>
-            <li>
               <span
-                >ESP32 อัดเสียงแล้วส่งไป backend ทาง Wi-Fi</span
+                >ไมค์ INMP441 แปลงเสียงเป็นสัญญาณดิจิทัล ส่งเข้า ESP32 ผ่าน
+                I2S</span
               >
             </li>
             <li>
-              <span
-                >Backend ตรวจคำปลุกและคำสั่ง แล้วตอบ JSON</span
-              >
+              <span>ESP32 อัดเสียงแล้วส่งไป backend ทาง Wi-Fi</span>
             </li>
             <li>
-              <span
-                >ESP32 สั่งรีเลย์ GPIO23 และแสดงผลผ่าน LED/LCD</span
-              >
+              <span>Backend ตรวจคำปลุกและคำสั่ง แล้วตอบ JSON</span>
+            </li>
+            <li>
+              <span>ESP32 สั่งรีเลย์ GPIO23 และแสดงผลผ่าน LED/LCD</span>
             </li>
             <li>
               <span>รีเลย์ต่อหรือตัดโหลด DC ผ่าน COM และ NO</span>
@@ -1642,8 +2036,8 @@
         <div class="wrap">
           <h2>การต่อวงจร</h2>
           <p>
-            ต่ออุปกรณ์ตามลำดับ และถอด USB ก่อนย้ายสาย
-            GPIO อ้างอิงจาก <code>lantern_config.h</code>
+            ต่ออุปกรณ์ตามลำดับ และถอด USB ก่อนย้ายสาย GPIO อ้างอิงจาก
+            <code>lantern_config.h</code>
           </p>
 
           <div class="wire-intro">
@@ -1697,7 +2091,11 @@
               </table>
             </div>
             <figure class="wire-figure glass">
-              <a href="assets/wiring/circuit-diagram.jpg" target="_blank" rel="noopener">
+              <a
+                href="assets/wiring/circuit-diagram.jpg"
+                target="_blank"
+                rel="noopener"
+              >
                 <img
                   src="assets/wiring/circuit-diagram.jpg"
                   width="1536"
@@ -1713,17 +2111,34 @@
           <ol class="wire-steps">
             <li class="glass">
               <h3>เตรียมราง GND และไฟเลี้ยง</h3>
-              <p>
-                ต่อ GND ร่วมก่อนจ่ายไฟ อุปกรณ์ทุกตัวใช้รางเดียวกัน
-              </p>
+              <p>ต่อ GND ร่วมก่อนจ่ายไฟ อุปกรณ์ทุกตัวใช้รางเดียวกัน</p>
               <table class="pin-table">
                 <thead>
-                  <tr><th scope="col">ขา ESP32</th><th scope="col">ต่อไปที่</th></tr>
+                  <tr>
+                    <th scope="col">ขา ESP32</th>
+                    <th scope="col">ต่อไปที่</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  <tr><td><span class="w g"></span><span class="gpio gnd">GND</span></td><td>ราง − (GND ร่วม)</td></tr>
-                  <tr><td><span class="w v"></span><span class="gpio pwr">3V3</span></td><td>ไมค์ INMP441 เท่านั้น</td></tr>
-                  <tr><td><span class="w v"></span><span class="gpio pwr">VIN (5V)</span></td><td>รีเลย์ และ LCD (ถ้าใช้ 5V)</td></tr>
+                  <tr>
+                    <td>
+                      <span class="w g"></span><span class="gpio gnd">GND</span>
+                    </td>
+                    <td>ราง − (GND ร่วม)</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="w v"></span><span class="gpio pwr">3V3</span>
+                    </td>
+                    <td>ไมค์ INMP441 เท่านั้น</td>
+                  </tr>
+                  <tr>
+                    <td>
+                      <span class="w v"></span
+                      ><span class="gpio pwr">VIN (5V)</span>
+                    </td>
+                    <td>รีเลย์ และ LCD (ถ้าใช้ 5V)</td>
+                  </tr>
                 </tbody>
               </table>
             </li>
@@ -1733,15 +2148,39 @@
               <p>ใช้ไฟ 3.3V เท่านั้น ห้ามต่อ 5V</p>
               <table class="pin-table">
                 <thead>
-                  <tr><th scope="col">ขา INMP441</th><th scope="col">ต่อกับ ESP32</th></tr>
+                  <tr>
+                    <th scope="col">ขา INMP441</th>
+                    <th scope="col">ต่อกับ ESP32</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  <tr><td><span class="w v"></span>VCC</td><td><span class="gpio pwr">3V3</span></td></tr>
-                  <tr><td><span class="w g"></span>GND</td><td><span class="gpio gnd">GND</span></td></tr>
-                  <tr><td><span class="w"></span>SCK / BCLK</td><td><span class="gpio">GPIO26</span></td></tr>
-                  <tr><td><span class="w"></span>WS / LRCLK</td><td><span class="gpio">GPIO25</span></td></tr>
-                  <tr><td><span class="w"></span>SD / DOUT</td><td><span class="gpio">GPIO33</span></td></tr>
-                    <tr><td><span class="w g"></span>L/R</td><td><span class="gpio gnd">GND</span> ผ่าน resistor pull-down <span class="muted">(เลือกช่องซ้าย)</span></td></tr>
+                  <tr>
+                    <td><span class="w v"></span>VCC</td>
+                    <td><span class="gpio pwr">3V3</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="w g"></span>GND</td>
+                    <td><span class="gpio gnd">GND</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="w"></span>SCK / BCLK</td>
+                    <td><span class="gpio">GPIO26</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="w"></span>WS / LRCLK</td>
+                    <td><span class="gpio">GPIO25</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="w"></span>SD / DOUT</td>
+                    <td><span class="gpio">GPIO33</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="w g"></span>L/R</td>
+                    <td>
+                      <span class="gpio gnd">GND</span> ผ่าน resistor pull-down
+                      <span class="muted">(เลือกช่องซ้าย)</span>
+                    </td>
+                  </tr>
                 </tbody>
               </table>
               <p class="note">
@@ -1754,18 +2193,37 @@
               <p>จอแสดงสถานะ ใช้ I2C ที่อยู่ 0x27</p>
               <table class="pin-table">
                 <thead>
-                  <tr><th scope="col">ขา LCD</th><th scope="col">ต่อกับ ESP32</th></tr>
+                  <tr>
+                    <th scope="col">ขา LCD</th>
+                    <th scope="col">ต่อกับ ESP32</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  <tr><td><span class="w v"></span>VCC</td><td><span class="gpio pwr">VIN (5V)</span> หรือ <span class="gpio pwr">3V3</span> <span class="muted">(ตามสเปกบอร์ด)</span></td></tr>
-                  <tr><td><span class="w g"></span>GND</td><td><span class="gpio gnd">GND</span></td></tr>
-                  <tr><td><span class="w"></span>SDA</td><td><span class="gpio">GPIO18</span></td></tr>
-                  <tr><td><span class="w"></span>SCL</td><td><span class="gpio">GPIO19</span></td></tr>
+                  <tr>
+                    <td><span class="w v"></span>VCC</td>
+                    <td>
+                      <span class="gpio pwr">VIN (5V)</span> หรือ
+                      <span class="gpio pwr">3V3</span>
+                      <span class="muted">(ตามสเปกบอร์ด)</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span class="w g"></span>GND</td>
+                    <td><span class="gpio gnd">GND</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="w"></span>SDA</td>
+                    <td><span class="gpio">GPIO18</span></td>
+                  </tr>
+                  <tr>
+                    <td><span class="w"></span>SCL</td>
+                    <td><span class="gpio">GPIO19</span></td>
+                  </tr>
                 </tbody>
               </table>
               <p class="note">
-                <strong>ระวัง:</strong> ตรวจ pull-up SDA/SCL ไม่ให้เป็น 5V
-                และ firmware จะสแกน address สำรองให้เมื่อไม่พบ 0x27
+                <strong>ระวัง:</strong> ตรวจ pull-up SDA/SCL ไม่ให้เป็น 5V และ
+                firmware จะสแกน address สำรองให้เมื่อไม่พบ 0x27
               </p>
             </li>
 
@@ -1774,18 +2232,39 @@
               <p>ขดลวดใช้ 5V ส่วน IN รับสัญญาณจาก ESP32</p>
               <table class="pin-table">
                 <thead>
-                  <tr><th scope="col">ขารีเลย์</th><th scope="col">ต่อไปที่</th></tr>
+                  <tr>
+                    <th scope="col">ขารีเลย์</th>
+                    <th scope="col">ต่อไปที่</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  <tr><td><span class="w v"></span>VCC</td><td><span class="gpio pwr">VIN (5V)</span> หรือแหล่งจ่าย 5V ภายนอก</td></tr>
-                  <tr><td><span class="w g"></span>GND</td><td><span class="gpio gnd">GND</span> (ร่วมกับ ESP32)</td></tr>
-                  <tr><td><span class="w"></span>IN (S)</td><td><span class="gpio">GPIO23</span> <span class="muted">Active LOW</span></td></tr>
-                  <tr><td>COM / NO</td><td>ต่ออนุกรมกับโหลด DC แรงดันต่ำ</td></tr>
+                  <tr>
+                    <td><span class="w v"></span>VCC</td>
+                    <td>
+                      <span class="gpio pwr">VIN (5V)</span> หรือแหล่งจ่าย 5V
+                      ภายนอก
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span class="w g"></span>GND</td>
+                    <td><span class="gpio gnd">GND</span> (ร่วมกับ ESP32)</td>
+                  </tr>
+                  <tr>
+                    <td><span class="w"></span>IN (S)</td>
+                    <td>
+                      <span class="gpio">GPIO23</span>
+                      <span class="muted">Active LOW</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>COM / NO</td>
+                    <td>ต่ออนุกรมกับโหลด DC แรงดันต่ำ</td>
+                  </tr>
                 </tbody>
               </table>
               <p class="note">
-                Active LOW: GPIO23 = LOW ทำงาน, HIGH ปล่อย
-                ตรวจสอบ logic 3.3V ของโมดูลก่อนใช้จริง
+                Active LOW: GPIO23 = LOW ทำงาน, HIGH ปล่อย ตรวจสอบ logic 3.3V
+                ของโมดูลก่อนใช้จริง
               </p>
             </li>
 
@@ -1794,33 +2273,58 @@
               <p>ต้องต่อตัวต้านทานเพื่อป้องกัน LED และ GPIO</p>
               <table class="pin-table">
                 <thead>
-                  <tr><th scope="col">ขา LED</th><th scope="col">ต่อไปที่</th></tr>
+                  <tr>
+                    <th scope="col">ขา LED</th>
+                    <th scope="col">ต่อไปที่</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  <tr><td><span class="w"></span>Anode (+) ขายาว</td><td>ตัวต้านทาน 220Ω–1kΩ → <span class="gpio">GPIO17</span></td></tr>
-                  <tr><td><span class="w g"></span>Cathode (−) ขาสั้น</td><td><span class="gpio gnd">GND</span></td></tr>
+                  <tr>
+                    <td><span class="w"></span>Anode (+) ขายาว</td>
+                    <td>
+                      ตัวต้านทาน 220Ω–1kΩ → <span class="gpio">GPIO17</span>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td><span class="w g"></span>Cathode (−) ขาสั้น</td>
+                    <td><span class="gpio gnd">GND</span></td>
+                  </tr>
                 </tbody>
               </table>
             </li>
 
             <li class="glass">
               <h3>จ่ายไฟและทดสอบ</h3>
-              <p>
-                ตรวจสาย แล้วเสียบ USB 5V เปิด Serial Monitor 115200 baud
-              </p>
+              <p>ตรวจสาย แล้วเสียบ USB 5V เปิด Serial Monitor 115200 baud</p>
               <table class="pin-table">
                 <thead>
-                  <tr><th scope="col">ตรวจ</th><th scope="col">ผลที่ควรเห็น</th></tr>
+                  <tr>
+                    <th scope="col">ตรวจ</th>
+                    <th scope="col">ผลที่ควรเห็น</th>
+                  </tr>
                 </thead>
                 <tbody>
-                  <tr><td>LCD</td><td>ขึ้น <code>LANTERN BOOTING</code> แล้วเป็น <code>READY / SAY TEE</code></td></tr>
-                  <tr><td>Serial</td><td><code>LCD I2C scan: SDA=18 SCL=19</code> และ <code>Relay controller ready: GPIO23</code></td></tr>
-                  <tr><td>รีเลย์</td><td>ไม่ทำงานตอนเปิดเครื่อง (สถานะ OFF)</td></tr>
+                  <tr>
+                    <td>LCD</td>
+                    <td>
+                      ขึ้น <code>LANTERN BOOTING</code> แล้วเป็น
+                      <code>READY / SAY TEE</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>Serial</td>
+                    <td>
+                      <code>LCD I2C scan: SDA=18 SCL=19</code> และ
+                      <code>Relay controller ready: GPIO23</code>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td>รีเลย์</td>
+                    <td>ไม่ทำงานตอนเปิดเครื่อง (สถานะ OFF)</td>
+                  </tr>
                 </tbody>
               </table>
-              <p class="note">
-                แหล่งจ่าย 5V แยกต้องต่อ GND ร่วมกับ ESP32
-              </p>
+              <p class="note">แหล่งจ่าย 5V แยกต้องต่อ GND ร่วมกับ ESP32</p>
             </li>
           </ol>
         </div>
@@ -1831,8 +2335,9 @@
         <div class="wrap">
           <h2>คำเตือนด้านความปลอดภัย</h2>
           <p>
-            ศึกษาอุปกรณ์และวงจรให้เข้าใจก่อนทำงาน เพราะรีเลย์อาจเกี่ยวข้องกับไฟบ้าน 220V
-            ซึ่งเสี่ยงไฟดูด ไฟไหม้ และอุปกรณ์เสียหาย
+            ศึกษาอุปกรณ์และวงจรให้เข้าใจก่อนทำงาน
+            เพราะรีเลย์อาจเกี่ยวข้องกับไฟบ้าน 220V ซึ่งเสี่ยงไฟดูด ไฟไหม้
+            และอุปกรณ์เสียหาย
           </p>
           <p>
             โปรเจกต์นี้ทดสอบเฉพาะแรงดันต่ำ ห้ามต่อ 220V กับบอร์ดหรือสายไฟเปลือย
@@ -1845,24 +2350,37 @@
       <section class="block" id="source">
         <div class="wrap">
           <h2>สื่อและ Source Code</h2>
-          <p>
-            เลือกเปิดดู Source Code, Poster หรือ Clip จากปุ่มด้านล่าง
-          </p>
+          <p>เลือกเปิดดู Source Code, Poster หรือ Clip จากปุ่มด้านล่าง</p>
           <ul class="source-grid">
             <li class="glass">
-              <a class="source-button" href="https://github.com/WelovePTae/lantern" target="_blank" rel="noopener">
+              <a
+                class="source-button"
+                href="https://github.com/WelovePTae/lantern"
+                target="_blank"
+                rel="noopener"
+              >
                 <h3>Source Code</h3>
                 <p>เปิด GitHub repository ของ Lantern</p>
               </a>
             </li>
             <li class="glass">
-              <a class="source-button" href="https://drive.google.com/file/d/1U2ou9iE6pM_z1OEKEgWNJmBeTJP3X_u1/view?usp=sharing" target="_blank" rel="noopener">
+              <a
+                class="source-button"
+                href="https://drive.google.com/file/d/1U2ou9iE6pM_z1OEKEgWNJmBeTJP3X_u1/view?usp=sharing"
+                target="_blank"
+                rel="noopener"
+              >
                 <h3>Poster</h3>
                 <p>เปิดหน้า presentation ของโครงการ</p>
               </a>
             </li>
             <li class="glass">
-              <a class="source-button" href="https://www.youtube.com/watch?v=RxfsOHXhSE4" target="_blank" rel="noopener">
+              <a
+                class="source-button"
+                href="https://www.youtube.com/watch?v=RxfsOHXhSE4"
+                target="_blank"
+                rel="noopener"
+              >
                 <h3>Clip</h3>
                 <p>ดูคลิปวิดีโอนำเสนอโปรเจค</p>
               </a>
@@ -1915,15 +2433,12 @@
             </li>
             <li class="glass">
               <div class="avatar">
-                <img
-                  src="assets/icons/person.webp"
-                  width="120"
-                  height="120"
-                  alt=""
-                />
+                <img src="assets/team/pj.jpg" width="120" height="120" alt="" />
               </div>
-              <div class="name">ฉันทพิชญา โมไนยปิยโคิน</div>
-              <div class="meta">(หัวหน้าทีม) ออกแบบชิ้นงาน / ทำเอกสาร<br />68070021</div>
+              <div class="name">นางสาวฉันทพิชญา โมไนยปิยโภคิน</div>
+              <div class="meta">
+                (หัวหน้าทีม) ออกแบบชิ้นงาน / ทำเอกสาร<br />68070021
+              </div>
             </li>
             <li class="glass">
               <div class="avatar">
@@ -1949,7 +2464,10 @@
         <p>LANTERN — วิชา Physical Computing ภาคเรียนที่ 1/2569</p>
         <p class="credit">
           เครดิตภาพอยู่ใน
-          <a href="https://github.com/WelovePTae/lantern" target="_blank" rel="noopener"
+          <a
+            href="https://github.com/WelovePTae/lantern"
+            target="_blank"
+            rel="noopener"
             >GitHub repository</a
           >
         </p>
@@ -2031,18 +2549,9 @@
 
       // ---------- แผนผังการทำงาน: คำอธิบายสั้นๆ ตอนชี้เมาส์ ----------
       const PARTS = {
-        voice: [
-          "1 · เสียงพูด",
-          "พูด “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”",
-        ],
-        mic: [
-          "ไมโครโฟน INMP441",
-          "ไมค์ I2S 3.3V ต่อ GPIO26, 25, 33",
-        ],
-        stt: [
-          "หลังบ้าน (FastAPI)",
-          "แปลงเสียงและตรวจ “ตี๋” “เปิด” “ปิด”",
-        ],
+        voice: ["1 · เสียงพูด", "พูด “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”"],
+        mic: ["ไมโครโฟน INMP441", "ไมค์ I2S 3.3V ต่อ GPIO26, 25, 33"],
+        stt: ["หลังบ้าน (FastAPI)", "แปลงเสียงและตรวจ “ตี๋” “เปิด” “ปิด”"],
         arduino: [
           "ESP32 DevKit V1",
           "รับเสียง ส่งข้อมูล และควบคุมรีเลย์ LED LCD",
@@ -2050,16 +2559,10 @@
         relay: ["รีเลย์ 5V", "IN ต่อ GPIO23 แบบ Active LOW"],
         ac: ["แหล่งจ่าย DC", "ใช้กับโหลดแรงดันต่ำเท่านั้น"],
         lamp: ["โหลด DC (LED สาธิต)", "ติดเมื่อรีเลย์ทำงาน"],
-        lcd: [
-          "จอ LCD 16x2 I2C",
-          "SDA18, SCL19, address 0x27",
-        ],
+        lcd: ["จอ LCD 16x2 I2C", "SDA18, SCL19, address 0x27"],
         led: ["LED สถานะ", "GPIO17 ผ่านตัวต้านทาน"],
         "voice-mic": ["1 · ผู้ใช้ → ไมค์", "เสียงพูดเข้าไมค์"],
-        "mic-arduino": [
-          "2 · ไมค์ → ESP32",
-          "ส่งเสียงผ่าน I2S: 26, 25, 33",
-        ],
+        "mic-arduino": ["2 · ไมค์ → ESP32", "ส่งเสียงผ่าน I2S: 26, 25, 33"],
         "arduino-stt": [
           "3 · ESP32 → หลังบ้าน",
           "ส่ง WAV ผ่าน Wi-Fi ด้วย HTTP POST",
@@ -2074,10 +2577,7 @@
         ],
         "arduino-lcd": ["ESP32 → LCD", "SDA18, SCL19"],
         "arduino-led": ["ESP32 → LED", "GPIO17 ผ่านตัวต้านทาน"],
-        "ac-relay": [
-          "แหล่งจ่าย DC → รีเลย์",
-          "จ่ายไฟเข้า COM ของรีเลย์",
-        ],
+        "ac-relay": ["แหล่งจ่าย DC → รีเลย์", "จ่ายไฟเข้า COM ของรีเลย์"],
         "relay-lamp": [
           "6 · รีเลย์ → โหลด DC",
           "NO ต่อโหลด เมื่อรีเลย์ทำงานโหลดติด",
