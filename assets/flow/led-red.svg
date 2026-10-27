@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-labelledby="title desc">
+  <title id="title">LED สีแดง</title>
+  <desc id="desc">หลอด LED สีแดงสำหรับแสดงสถานะ</desc>
+  <ellipse cx="60" cy="99" rx="24" ry="6" fill="#1B2530" opacity=".16" />
+  <g stroke="#9AA1A6" stroke-width="3" stroke-linecap="round">
+    <path d="M54 71 V97" />
+    <path d="M66 71 V91" />
+  </g>
+  <rect x="40" y="65" width="40" height="7" rx="2" fill="#B8352D" />
+  <path d="M44 66 V41 A16 16 0 0 1 76 41 V66 Z" fill="#E5483F" />
+  <path d="M51 41 A9 9 0 0 1 60 31" fill="none" stroke="#FFD2CC" stroke-width="3" stroke-linecap="round" />
+</svg>

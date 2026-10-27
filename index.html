@@ -631,6 +631,16 @@
         margin: 0 0 10px -6px;
         filter: drop-shadow(0 10px 12px rgba(20, 32, 44, 0.16));
       }
+      .part-card img.product-image {
+        width: min(100%, 180px);
+        height: 132px;
+        margin: 0 0 14px -2px;
+        padding: 8px;
+        border-radius: 14px;
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.74);
+        box-shadow: inset 0 0 0 1px rgba(20, 32, 44, 0.06);
+      }
       .part-card h3 {
         font-size: 1.05rem;
         margin-bottom: 0.3em;
@@ -883,6 +893,97 @@
         line-height: 1.5;
       }
 
+      /* ---------- academic and technical documentation ---------- */
+      .doc-card {
+        padding: 22px 22px 20px;
+      }
+      .abstract-layout {
+        width: min(100%, 920px);
+        margin: 1.6rem auto 0;
+      }
+      .abstract-card {
+        padding: clamp(24px, 4vw, 44px);
+      }
+      .abstract-card h3 {
+        color: var(--wire-neutral);
+        font-size: clamp(1.18rem, 2vw, 1.4rem);
+      }
+      .abstract-card p {
+        max-width: none;
+        text-align: justify;
+        text-justify: inter-character;
+      }
+      .abstract-card p + p {
+        margin-top: 1em;
+      }
+      .split > .doc-card {
+        border-left: 0;
+        padding-left: 22px;
+      }
+      .doc-card h3 {
+        margin-bottom: 0.55em;
+      }
+      .doc-card p,
+      .doc-card li {
+        color: var(--ink-soft);
+        font-size: 0.94rem;
+        line-height: 1.6;
+      }
+      .doc-card ul {
+        margin: 0;
+        padding-left: 1.2em;
+      }
+      .doc-card li + li {
+        margin-top: 0.45em;
+      }
+      .doc-card code {
+        padding: 1px 5px;
+        border-radius: 6px;
+        background: rgba(27, 37, 48, 0.06);
+        overflow-wrap: anywhere;
+      }
+      .source-grid {
+        list-style: none;
+        padding: 0;
+        margin: 1.6rem 0 0;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 18px;
+      }
+      .source-grid a,
+      .source-grid .source-button {
+        display: block;
+        height: 100%;
+        padding: 20px;
+        color: var(--ink);
+        text-decoration: none;
+      }
+      .source-grid a:hover {
+        border-color: var(--glow);
+      }
+      .source-grid .source-button {
+        display: flex;
+        min-height: 132px;
+        flex-direction: column;
+        justify-content: center;
+        width: 100%;
+      }
+      .source-grid .source-button.is-disabled {
+        cursor: not-allowed;
+        opacity: 0.48;
+        pointer-events: none;
+      }
+      .source-grid h3 {
+        color: var(--wire-neutral);
+        margin-bottom: 0.35em;
+      }
+      .source-grid p {
+        margin: 0;
+        color: var(--ink-soft);
+        font-size: 0.9rem;
+        line-height: 1.5;
+      }
+
       footer {
         border-top: 1px solid var(--line);
         color: var(--ink-soft);
@@ -928,6 +1029,13 @@
         .team {
           grid-template-columns: repeat(3, 1fr);
         }
+        .source-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .nav a {
+          padding-inline: 10px;
+          font-size: 0.88rem;
+        }
       }
       @media (max-width: 860px) {
         .wire-intro {
@@ -935,6 +1043,31 @@
         }
       }
       @media (max-width: 640px) {
+        body {
+          font-size: 17px;
+        }
+        .nav ul {
+          padding-inline: 10px;
+        }
+        .nav a {
+          padding-inline: 8px;
+          font-size: 0.82rem;
+        }
+        .hero-grid {
+          gap: 18px;
+          padding-block: 42px 56px;
+        }
+        .hero-grid > div:first-child {
+          order: 1;
+          text-align: center;
+        }
+        .lamp {
+          order: 2;
+          --size: min(64vw, 230px);
+        }
+        .tagline {
+          margin-inline: auto;
+        }
         .wire-steps > li {
           grid-template-columns: 1fr;
           padding: 18px 16px 20px;
@@ -954,6 +1087,15 @@
         .team {
           grid-template-columns: repeat(2, 1fr);
         }
+        .source-grid {
+          grid-template-columns: 1fr;
+        }
+        .flow {
+          margin-inline: calc(-1 * var(--gutter));
+          border-right: 0;
+          border-left: 0;
+          border-radius: 0;
+        }
       }
     </style>
   </head>
@@ -961,9 +1103,11 @@
     <nav class="nav" aria-label="สารบัญ">
       <ul>
         <li><a href="#idea">ไอเดีย</a></li>
+        <li><a href="#abstract">บทคัดย่อ</a></li>
         <li><a href="#how">การทำงาน</a></li>
         <li><a href="#parts">อุปกรณ์</a></li>
         <li><a href="#wiring">การต่อวงจร</a></li>
+        <li><a href="#source">Source Code</a></li>
         <li><a href="#team">ทีม</a></li>
       </ul>
     </nav>
@@ -1010,24 +1154,21 @@
               <h2>ไอเดียของเรา</h2>
               <div class="bubble glass">
                 <p>
-                  LANTERN เป็นระบบ hands-free ที่ฟังเสียงเราได้ แค่เรียกชื่อ
-                  “ตี๋” แล้วต่อด้วย “เปิด” หรือ “ปิด” ระบบจะส่งคำสั่งไปยัง ESP32
-                  เพื่อควบคุมโหลดแรงดันต่ำสำหรับการสาธิต
+                  LANTERN คือระบบสั่งงานด้วยเสียงแบบ hands-free เรียก “ตี๋”
+                  แล้วพูด “เปิด” หรือ “ปิด” เพื่อควบคุมโหลดแรงดันต่ำ
                 </p>
               </div>
               <div class="split">
                 <div>
                   <h3>ปัญหาที่เจอ</h3>
                   <p class="muted">
-                    นอนอยู่บนเตียงแล้วต้องลุกไปปิดไฟ มือไม่ว่างตอนถือของ
-                    หรือคนที่เดินไปกดสวิตช์ได้ลำบาก เช่น ผู้สูงอายุ
+                    ลดการพึ่งพาสวิตช์ในเวลาที่มือไม่ว่างหรือเดินไปกดได้ลำบาก
                   </p>
                 </div>
                 <div>
                   <h3>สิ่งที่เราทำ</h3>
                   <p class="muted">
-                    หลังบ้านแปลงเสียงเป็นข้อความ ตรวจคำปลุกและคำสั่ง แล้วส่ง
-                    JSON command ผ่าน Wi-Fi ให้ ESP32 สั่งงานอุปกรณ์สาธิต
+                    Backend ตรวจเสียงและคำสั่ง แล้วส่ง JSON ผ่าน Wi-Fi ให้ ESP32
                   </p>
                 </div>
               </div>
@@ -1044,15 +1185,44 @@
         </div>
       </section>
 
+      <!-- ===================== ABSTRACT ===================== -->
+      <section class="block" id="abstract">
+        <div class="wrap">
+          <h2>บทคัดย่อ</h2>
+          <div class="abstract-layout">
+            <article class="glass doc-card abstract-card" id="abstract-th">
+              <h3>บทคัดย่อ</h3>
+              <p>
+                Lantern เป็นต้นแบบระบบสั่งงานอุปกรณ์ด้วยเสียงภาษาไทยแบบ hands-free
+                ใช้ ESP32, INMP441, LCD 16x2 I2C, LED และรีเลย์แรงดันต่ำ
+                โดยใช้ FastAPI และ Typhoon ASR รุ่น <code>typhoon-asr-realtime</code>
+              </p>
+              <p>
+                ESP32 รับเสียง mono 16 kHz ผ่าน I2S ใช้ VAD แบ่งเสียงเป็นช่วง
+                แล้วส่งไฟล์ WAV แบบ PCM16 ด้วย HTTP POST ไปยัง backend
+                Backend เรียก ASR ตรวจคำปลุก “ตี๋” และอนุญาตคำสั่ง
+                <code>LIGHT_ON</code> หรือ <code>LIGHT_OFF</code>
+              </p>
+              <p>
+                ระบบแยกส่วนรับเสียง ประมวลผลภาษา และควบคุมอุปกรณ์อย่างชัดเจน
+                พร้อมแสดงสถานะผ่าน LCD และ LED เพื่อรองรับการขยายอุปกรณ์ในอนาคต
+              </p>
+            </article>
+          </div>
+        </div>
+      </section>
+
       <!-- ===================== HOW ===================== -->
       <section class="block" id="how">
         <div class="wrap">
           <h2>การทำงาน</h2>
           <p>
-            ระบบประกอบด้วยไมค์ INMP441, ESP32, จอ LCD, FastAPI backend
-            และรีเลย์ที่ทำงานด้วยไฟต่ำ
-            โดย relay ใช้กับ LED หรือโหลด DC แรงดันต่ำเท่านั้น
-            การต่อโหลดไฟบ้านไม่อยู่ในขอบเขตการทดสอบของ repository นี้
+            ระบบใช้ INMP441, ESP32, LCD, FastAPI และรีเลย์แรงดันต่ำ
+            สำหรับควบคุม LED หรือโหลด DC เท่านั้น
+          </p>
+          <p class="muted">
+            ESP32 ส่ง WAV ผ่าน Wi-Fi ไปยัง FastAPI ที่ <code>0.0.0.0:8000</code>
+            แล้วรับ JSON กลับมา Backend ไม่ได้ควบคุม GPIO โดยตรง
           </p>
 
           <figure class="flow glass" id="flow">
@@ -1250,7 +1420,7 @@
                 <rect class="tile" x="360" y="225" width="240" height="160" rx="16" />
                 <g class="art" transform="translate(480 287)">
                   <ellipse cx="0" cy="42" rx="46" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <image href="assets/flow/arduino.webp" x="-68" y="-54" width="136" height="100" />
+                  <image href="assets/esp32-product-transparent.png" x="-68" y="-54" width="136" height="100" preserveAspectRatio="xMidYMid meet" />
                 </g>
                 <text x="480" y="353" text-anchor="middle">ESP32 DevKit V1</text>
                 <text class="sub" x="480" y="374" text-anchor="middle">ตัวควบคุมหลัก</text>
@@ -1283,10 +1453,7 @@
                 <rect class="tile" x="360" y="430" width="240" height="160" rx="16" />
                 <g class="art" transform="translate(480 492)">
                   <ellipse cx="0" cy="42" rx="60" ry="6" fill="#1B2530" opacity=".16" filter="url(#soft)" />
-                  <rect x="-72" y="-34" width="144" height="64" rx="7" fill="#2E8B57" />
-                  <rect x="-60" y="-24" width="120" height="44" rx="4" fill="#2457C9" />
-                  <text class="lcd-text" x="-52" y="-5">READY</text>
-                  <text class="lcd-text" x="-52" y="12">SAY TEE</text>
+                  <image href="assets/lcd-product-transparent.png" x="-68" y="-48" width="136" height="94" preserveAspectRatio="xMidYMid meet" />
                 </g>
                 <text x="480" y="558" text-anchor="middle">จอ LCD 16x2</text>
                 <text class="sub" x="480" y="579" text-anchor="middle">แสดงสถานะระบบ</text>
@@ -1332,31 +1499,28 @@
 
           <ol class="steps">
             <li>
-              <span>ผู้ใช้พูดคำปลุก “ตี๋” แล้วต่อด้วย “เปิดไฟ” หรือ “ปิดไฟ”</span>
+              <span>พูด “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”</span>
             </li>
             <li>
               <span>ไมค์ INMP441 แปลงเสียงเป็นสัญญาณดิจิทัล ส่งเข้า ESP32 ผ่าน I2S</span>
             </li>
             <li>
               <span
-                >ESP32 อัดเสียงช่วงที่มีคนพูด แล้วส่งไปหลังบ้านทาง Wi-Fi
-                หลังบ้านแปลงเสียงเป็นข้อความด้วย Speech-to-Text</span
+                >ESP32 อัดเสียงแล้วส่งไป backend ทาง Wi-Fi</span
               >
             </li>
             <li>
               <span
-                >หลังบ้านเช็กคำว่า “ตี๋” และคำสั่ง แล้วตอบกลับ ESP32 เป็น JSON
-                ถ้าไม่มีคำปลุกหรือคำสั่งไม่ชัดเจน ESP32 จะไม่ทำอะไร</span
+                >Backend ตรวจคำปลุกและคำสั่ง แล้วตอบ JSON</span
               >
             </li>
             <li>
               <span
-                >ESP32 สั่งรีเลย์ผ่าน GPIO23 (Active LOW: LOW = ทำงาน)
-                พร้อมเปิดหรือปิด LED สถานะที่ GPIO17 และให้จอ LCD ขึ้น LIGHT ON / LIGHT OFF</span
+                >ESP32 สั่งรีเลย์ GPIO23 และแสดงผลผ่าน LED/LCD</span
               >
             </li>
             <li>
-              <span>รีเลย์ต่อหรือตัดโหลด DC แรงดันต่ำผ่านขา COM และ NO</span>
+              <span>รีเลย์ต่อหรือตัดโหลด DC ผ่าน COM และ NO</span>
             </li>
           </ol>
         </div>
@@ -1370,78 +1534,78 @@
           <ul class="part-grid">
             <li class="part-card glass">
               <img
-                src="assets/icons/arduino.webp"
+                src="assets/esp32-product-transparent.png"
+                class="product-image"
                 width="120"
                 height="120"
-                alt=""
+                alt="ภาพ ESP32 DevKit V1"
               />
               <h3>ESP32 DevKit V1</h3>
-              <p>บอร์ดหลัก อัดเสียงจากไมค์ ส่งให้ backend แล้วสั่งรีเลย์ LED และ LCD</p>
+              <p>บอร์ดหลัก รับเสียง ส่งข้อมูล และควบคุมอุปกรณ์</p>
               <span class="qty">× 1</span>
             </li>
             <li class="part-card glass">
               <img
-                src="assets/icons/mic.webp"
+                src="assets/icons/e1up4n.jpg"
                 width="120"
                 height="120"
                 alt=""
               />
-              <h3>ไมโครโฟน INMP441 (I2S)</h3>
-              <p>ไมค์ดิจิทัล รับเสียงพูดของผู้ใช้ ใช้ไฟ 3.3V</p>
+              <h3>ไมค์ INMP441</h3>
+              <p>ไมค์ดิจิทัลสำหรับรับเสียง ใช้ไฟ 3.3V</p>
               <span class="qty">× 1</span>
             </li>
             <li class="part-card glass">
               <img
-                src="assets/icons/computer.webp"
+                src="assets/flow/laptop.webp"
                 width="120"
                 height="120"
                 alt=""
               />
-              <h3>คอมพิวเตอร์ (หลังบ้าน)</h3>
-              <p>
-                แปลงเสียงเป็นข้อความ เช็กคำปลุก แล้วส่ง JSON command ให้ ESP32
-              </p>
+              <h3>FastAPI Backend</h3>
+              <p>แปลงเสียง ตรวจคำสั่ง และส่ง JSON ให้ ESP32</p>
               <span class="qty">× 1</span>
             </li>
             <li class="part-card glass">
               <img
-                src="assets/icons/relay.webp"
+                src="assets/flow/relay.webp"
                 width="120"
                 height="120"
                 alt=""
               />
               <h3>โมดูลรีเลย์ 5V</h3>
-              <p>SRD-05VDC-SL-C แบบ Active LOW ต่อ/ตัดโหลด DC แรงดันต่ำ</p>
+              <p>รีเลย์ 5V แบบ Active LOW สำหรับโหลด DC แรงดันต่ำ</p>
               <span class="qty">× 1</span>
             </li>
             <li class="part-card glass">
               <img
-                src="assets/icons/bulb.webp"
+                src="assets/flow/led-red.svg"
                 width="120"
                 height="120"
                 alt=""
               />
               <h3>LED แสดงสถานะ + ตัวต้านทาน</h3>
-              <p>LED 1 ดวง กับตัวต้านทาน 220Ω–1kΩ ต่อที่ GPIO17</p>
+              <p>LED ต่อผ่านตัวต้านทานที่ GPIO17</p>
               <span class="qty">× 1 ชุด</span>
             </li>
             <li class="part-card glass">
               <img
-                src="assets/icons/power.webp"
+                src="assets/lcd-product-transparent.png"
+                class="product-image"
                 width="120"
                 height="120"
-                alt=""
+                alt="ภาพ LCD 16x2 I2C"
               />
               <h3>LCD 16x2 I2C</h3>
-              <p>จอแสดงสถานะ ใช้ backpack PCF8574 ที่อยู่ 0x27</p>
+              <p>จอแสดงสถานะ I2C address 0x27</p>
               <span class="qty">× 1</span>
             </li>
             <li class="part-card glass">
               <img
-                src="assets/icons/jumper.webp"
+                src="assets/flow/vct-arduino-wire.jpg"
                 width="120"
                 height="120"
-                alt=""
+                alt="สายไฟสำหรับต่อ Arduino"
               />
               <h3>สายจัมเปอร์ / บอร์ดทดลอง</h3>
               <p>ต่ออุปกรณ์แรงดันต่ำกับ ESP32</p>
@@ -1455,21 +1619,18 @@
                 alt=""
               />
               <h3>สาย USB / แหล่งจ่าย 5V</h3>
-              <p>
-                จ่ายไฟให้ ESP32 ผ่าน USB ถ้าใช้ 5V แยกให้ LCD และรีเลย์
-                ต้องต่อ GND ร่วมกับ ESP32
-              </p>
+              <p>จ่ายไฟ ESP32 และต่อ GND ร่วมเมื่อใช้ไฟแยก</p>
               <span class="qty">× 1</span>
             </li>
             <li class="part-card glass">
               <img
-                src="assets/icons/bulb.webp"
+                src="assets/flow/bulb.webp"
                 width="120"
                 height="120"
                 alt=""
               />
               <h3>โหลด DC แรงดันต่ำ</h3>
-              <p>โหลดที่รีเลย์ต่อ/ตัดผ่านขา COM และ NO สำหรับการทดลอง</p>
+              <p>โหลด DC สำหรับทดลองผ่าน COM และ NO</p>
               <span class="qty">× 1</span>
             </li>
           </ul>
@@ -1477,12 +1638,12 @@
       </section>
 
       <!-- ===================== WIRING ===================== -->
-      <!-- <section class="block" id="wiring">
+      <section class="block" id="wiring">
         <div class="wrap">
           <h2>การต่อวงจร</h2>
           <p>
-            ต่อทีละอุปกรณ์ตามลำดับขั้นด้านล่าง ถอดสาย USB ออกก่อนต่อหรือย้ายสายทุกครั้ง
-            ขาทั้งหมดตรงกับค่าใน firmware (<code>lantern_config.h</code>)
+            ต่ออุปกรณ์ตามลำดับ และถอด USB ก่อนย้ายสาย
+            GPIO อ้างอิงจาก <code>lantern_config.h</code>
           </p>
 
           <div class="wire-intro">
@@ -1545,7 +1706,7 @@
                   alt="แผนภาพวงจรทั้งหมดของ Project Lantern: ESP32 DevKit V1 ต่อกับไมค์ INMP441, LCD 16x2 I2C, โมดูลรีเลย์ 5V และ LED แสดงสถานะ"
                 />
               </a>
-              <figcaption>แผนภาพวงจรฉบับเต็ม แตะที่รูปเพื่อเปิดขนาดใหญ่</figcaption>
+              <figcaption>แผนภาพวงจร แตะเพื่อเปิดขนาดใหญ่</figcaption>
             </figure>
           </div>
 
@@ -1553,8 +1714,7 @@
             <li class="glass">
               <h3>เตรียมราง GND และไฟเลี้ยง</h3>
               <p>
-                ถอด USB ออกก่อน ต่อขา GND ของ ESP32 เข้าราง − ของบอร์ดทดลอง
-                อุปกรณ์ทุกตัวจะใช้ GND รางเดียวกันนี้
+                ต่อ GND ร่วมก่อนจ่ายไฟ อุปกรณ์ทุกตัวใช้รางเดียวกัน
               </p>
               <table class="pin-table">
                 <thead>
@@ -1569,8 +1729,8 @@
             </li>
 
             <li class="glass">
-              <h3>ไมโครโฟน INMP441 (I2S)</h3>
-              <p>ไมค์รับไฟ 3.3V เท่านั้น ห้ามต่อ 5V</p>
+              <h3>ไมค์ INMP441</h3>
+              <p>ใช้ไฟ 3.3V เท่านั้น ห้ามต่อ 5V</p>
               <table class="pin-table">
                 <thead>
                   <tr><th scope="col">ขา INMP441</th><th scope="col">ต่อกับ ESP32</th></tr>
@@ -1581,11 +1741,11 @@
                   <tr><td><span class="w"></span>SCK / BCLK</td><td><span class="gpio">GPIO26</span></td></tr>
                   <tr><td><span class="w"></span>WS / LRCLK</td><td><span class="gpio">GPIO25</span></td></tr>
                   <tr><td><span class="w"></span>SD / DOUT</td><td><span class="gpio">GPIO33</span></td></tr>
-                  <tr><td><span class="w g"></span>L/R</td><td><span class="gpio gnd">GND</span> <span class="muted">(เลือกช่องซ้าย)</span></td></tr>
+                    <tr><td><span class="w g"></span>L/R</td><td><span class="gpio gnd">GND</span> ผ่าน resistor pull-down <span class="muted">(เลือกช่องซ้าย)</span></td></tr>
                 </tbody>
               </table>
               <p class="note">
-                firmware อ่านเสียงช่องซ้ายเท่านั้น ถ้าปล่อยขา L/R ลอยไว้ อาจได้เสียงเงียบ
+                L/R ต่อ GND ผ่าน resistor pull-down เพื่อเลือกช่องซ้าย
               </p>
             </li>
 
@@ -1604,15 +1764,14 @@
                 </tbody>
               </table>
               <p class="note">
-                <strong>ข้อควรระวัง:</strong> ถ้าจ่าย 5V ให้ LCD ตรวจว่าบอร์ด backpack
-                ไม่ได้ pull-up ขา SDA/SCL ขึ้น 5V เพราะขา GPIO ของ ESP32 รับได้แค่ 3.3V
-                firmware สแกนหาที่อยู่ 0x20–0x27 และ 0x38–0x3F ให้เองถ้าจอไม่ได้อยู่ที่ 0x27
+                <strong>ระวัง:</strong> ตรวจ pull-up SDA/SCL ไม่ให้เป็น 5V
+                และ firmware จะสแกน address สำรองให้เมื่อไม่พบ 0x27
               </p>
             </li>
 
             <li class="glass">
               <h3>โมดูลรีเลย์ 5V</h3>
-              <p>ขดลวดรีเลย์ใช้ไฟ 5V ส่วนขา IN รับสัญญาณ 3.3V จาก ESP32</p>
+              <p>ขดลวดใช้ 5V ส่วน IN รับสัญญาณจาก ESP32</p>
               <table class="pin-table">
                 <thead>
                   <tr><th scope="col">ขารีเลย์</th><th scope="col">ต่อไปที่</th></tr>
@@ -1625,15 +1784,14 @@
                 </tbody>
               </table>
               <p class="note">
-                Active LOW คือ GPIO23 = LOW รีเลย์ทำงาน, HIGH รีเลย์ปล่อย
-                firmware ตั้งขาเป็น HIGH ก่อนเปิดใช้งาน รีเลย์จึงเริ่มที่สถานะปิดเสมอ
-                ถ้ารีเลย์ค้างติดทั้งที่สั่งปิด แปลว่าโมดูลไม่รองรับสัญญาณ 3.3V
+                Active LOW: GPIO23 = LOW ทำงาน, HIGH ปล่อย
+                ตรวจสอบ logic 3.3V ของโมดูลก่อนใช้จริง
               </p>
             </li>
 
             <li class="glass">
               <h3>LED แสดงสถานะ</h3>
-              <p>ต้องมีตัวต้านทานคั่นเสมอ ไม่อย่างนั้น LED และขา GPIO เสียหายได้</p>
+              <p>ต้องต่อตัวต้านทานเพื่อป้องกัน LED และ GPIO</p>
               <table class="pin-table">
                 <thead>
                   <tr><th scope="col">ขา LED</th><th scope="col">ต่อไปที่</th></tr>
@@ -1648,8 +1806,7 @@
             <li class="glass">
               <h3>จ่ายไฟและทดสอบ</h3>
               <p>
-                ตรวจสายตามรายการด้านล่างก่อน แล้วเสียบ USB 5V เข้า ESP32
-                เปิด Serial Monitor ที่ 115200 baud
+                ตรวจสาย แล้วเสียบ USB 5V เปิด Serial Monitor 115200 baud
               </p>
               <table class="pin-table">
                 <thead>
@@ -1662,30 +1819,57 @@
                 </tbody>
               </table>
               <p class="note">
-                ถ้าใช้แหล่งจ่าย 5V แยกให้ LCD และรีเลย์ ต้องต่อ GND ของแหล่งจ่ายนั้นเข้ากับ GND ของ ESP32 ด้วย
+                แหล่งจ่าย 5V แยกต้องต่อ GND ร่วมกับ ESP32
               </p>
             </li>
           </ol>
         </div>
-      </section> -->
+      </section>
 
       <!-- ===================== SAFETY ===================== -->
-      <!-- <section class="block safety" id="safety">
+      <section class="block safety" id="safety">
         <div class="wrap">
-          <h2>ตรวจก่อนเสียบไฟ</h2>
+          <h2>คำเตือนด้านความปลอดภัย</h2>
           <p>
-            การทดลองนี้ใช้เฉพาะวงจรแรงดันต่ำ ห้ามต่อไฟบ้าน 220V เข้ารีเลย์หรือบอร์ดทดลอง
+            ศึกษาอุปกรณ์และวงจรให้เข้าใจก่อนทำงาน เพราะรีเลย์อาจเกี่ยวข้องกับไฟบ้าน 220V
+            ซึ่งเสี่ยงไฟดูด ไฟไหม้ และอุปกรณ์เสียหาย
           </p>
-          <ul>
-            <li>ตรวจสเปก LCD backpack ว่ารองรับ 5V หรือ 3.3V</li>
-            <li>ห้ามจ่าย 5V หรือ pull-up 5V เข้าขา GPIO ของ ESP32 โดยตรง</li>
-            <li>รีเลย์ใช้ไฟ 5V แต่ขา IN รับสัญญาณ 3.3V จาก ESP32</li>
-            <li>ESP32, LCD และรีเลย์ต้องใช้ GND ร่วมกัน</li>
-            <li>ใช้โหลด DC หรืออุปกรณ์แรงดันต่ำเท่านั้นระหว่างทดสอบ</li>
-            <li>รีเลย์เป็น Active LOW: สั่ง LOW = ทำงาน, HIGH = ปล่อย</li>
+          <p>
+            โปรเจกต์นี้ทดสอบเฉพาะแรงดันต่ำ ห้ามต่อ 220V กับบอร์ดหรือสายไฟเปลือย
+            งานไฟบ้านต้องใช้อุปกรณ์ป้องกันและช่างไฟฟ้าที่มีความชำนาญ
+          </p>
+        </div>
+      </section>
+
+      <!-- ===================== SOURCE ===================== -->
+      <section class="block" id="source">
+        <div class="wrap">
+          <h2>สื่อและ Source Code</h2>
+          <p>
+            เลือกเปิดดู Code, Poster หรือ Clip จากปุ่มด้านล่าง
+          </p>
+          <ul class="source-grid">
+            <li class="glass">
+              <a class="source-button" href="https://github.com/WelovePTae/lantern" target="_blank" rel="noopener">
+                <h3>Code</h3>
+                <p>เปิด GitHub repository ของ Lantern</p>
+              </a>
+            </li>
+            <li class="glass">
+              <a class="source-button" href="https://weloveptae.github.io/lantern/" target="_blank" rel="noopener">
+                <h3>Poster</h3>
+                <p>เปิดหน้า presentation ของโครงการ</p>
+              </a>
+            </li>
+            <li class="glass">
+              <span class="source-button is-disabled" aria-disabled="true">
+                <h3>Clip</h3>
+                <p>ยังไม่มีลิงก์วิดีโอเผยแพร่</p>
+              </span>
+            </li>
           </ul>
         </div>
-      </section> -->
+      </section>
 
       <!-- ===================== TEAM ===================== -->
       <section class="block" id="team">
@@ -1764,15 +1948,16 @@
       <div class="wrap">
         <p>LANTERN — วิชา Physical Computing ภาคเรียนที่ 1/2569</p>
         <p class="credit">
-          รูปอุปกรณ์จาก Wikimedia Commons (CC BY-SA / Free Art License / CC0 /
-          public domain) และ 3dicons.co (CC0) ดูรายชื่อผู้สร้างใน
-          <a href="https://github.com/weloveptae/lantern#เครดิตรูปภาพ"
-            >README</a
+          เครดิตภาพอยู่ใน
+          <a href="https://github.com/WelovePTae/lantern" target="_blank" rel="noopener"
+            >GitHub repository</a
           >
         </p>
       </div>
     </footer>
 
+    <!-- GSAP core: lightweight motion for the static presentation page -->
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
     <script>
       const hero = document.getElementById("hero");
       const lamp = document.getElementById("lamp");
@@ -1780,6 +1965,53 @@
       const mic = document.getElementById("mic");
       const heard = document.getElementById("heard");
       const hint = document.getElementById("voice-hint");
+
+      function initGsapMotion() {
+        const motion = window.gsap;
+        const reduceMotion = window.matchMedia(
+          "(prefers-reduced-motion: reduce)",
+        ).matches;
+        if (!motion || reduceMotion) return;
+
+        motion
+          .timeline({ defaults: { ease: "power2.out" } })
+          .from(".course", { y: 18, opacity: 0, duration: 0.5 })
+          .from(".hero h1", { y: 24, opacity: 0, duration: 0.7 }, "-=0.25")
+          .from(".tagline", { y: 16, opacity: 0, duration: 0.5 }, "-=0.3")
+          .from(".lamp", { scale: 0.92, opacity: 0, duration: 0.8 }, "-=0.45");
+
+        motion.to(lamp, {
+          y: -7,
+          duration: 2.4,
+          repeat: -1,
+          yoyo: true,
+          ease: "sine.inOut",
+        });
+
+        const revealTargets = document.querySelectorAll(
+          ".block > .wrap > h2, .bubble, .abstract-card, .flow, .part-card, " +
+            ".wire-card, .wire-figure, .wire-steps > li, .source-grid > li, .team > li",
+        );
+        const revealObserver = new IntersectionObserver(
+          (entries, observer) => {
+            entries.forEach((entry) => {
+              if (!entry.isIntersecting) return;
+              motion.from(entry.target, {
+                y: 18,
+                opacity: 0,
+                duration: 0.55,
+                ease: "power2.out",
+                clearProps: "transform,opacity",
+              });
+              observer.unobserve(entry.target);
+            });
+          },
+          { threshold: 0.12 },
+        );
+        revealTargets.forEach((target) => revealObserver.observe(target));
+      }
+
+      initGsapMotion();
 
       function setLamp(on) {
         hero.classList.toggle("is-on", on);
@@ -1801,54 +2033,54 @@
       const PARTS = {
         voice: [
           "1 · เสียงพูด",
-          "พูดว่า “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ” ใส่ไมค์ได้เลย",
+          "พูด “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”",
         ],
         mic: [
           "ไมโครโฟน INMP441",
-          "ไมค์ดิจิทัลแบบ I2S ใช้ไฟ 3.3V ต่อกับ ESP32 ที่ GPIO26, 25, 33",
+          "ไมค์ I2S 3.3V ต่อ GPIO26, 25, 33",
         ],
         stt: [
           "หลังบ้าน (FastAPI)",
-          "แปลงเสียงเป็นข้อความ แล้วหาคำว่า “ตี๋” “เปิด” “ปิด”",
+          "แปลงเสียงและตรวจ “ตี๋” “เปิด” “ปิด”",
         ],
         arduino: [
           "ESP32 DevKit V1",
-          "อัดเสียงจากไมค์ ส่งให้หลังบ้าน แล้วสั่งรีเลย์ LED และจอ LCD ตามคำตอบ",
+          "รับเสียง ส่งข้อมูล และควบคุมรีเลย์ LED LCD",
         ],
-        relay: ["รีเลย์ 5V", "ขา IN ต่อ GPIO23 แบบ Active LOW ต่อหรือตัดโหลด DC"],
-        ac: ["แหล่งจ่าย DC", "ไฟแรงดันต่ำสำหรับโหลดทดสอบ ห้ามใช้ไฟบ้าน 220V"],
-        lamp: ["โหลด DC (LED สาธิต)", "ติดเมื่อรีเลย์ต่อไฟ ดับเมื่อรีเลย์ตัดไฟ"],
+        relay: ["รีเลย์ 5V", "IN ต่อ GPIO23 แบบ Active LOW"],
+        ac: ["แหล่งจ่าย DC", "ใช้กับโหลดแรงดันต่ำเท่านั้น"],
+        lamp: ["โหลด DC (LED สาธิต)", "ติดเมื่อรีเลย์ทำงาน"],
         lcd: [
           "จอ LCD 16x2 I2C",
-          "SDA GPIO18, SCL GPIO19 ที่อยู่ 0x27 แสดง READY, LISTENING, LIGHT ON/OFF",
+          "SDA18, SCL19, address 0x27",
         ],
-        led: ["LED สถานะ", "ต่อ GPIO17 ผ่านตัวต้านทาน 220Ω–1kΩ ติดหรือดับตามคำสั่งไฟ"],
+        led: ["LED สถานะ", "GPIO17 ผ่านตัวต้านทาน"],
         "voice-mic": ["1 · ผู้ใช้ → ไมค์", "เสียงพูดเข้าไมค์"],
         "mic-arduino": [
           "2 · ไมค์ → ESP32",
-          "ส่งเสียงดิจิทัลผ่าน I2S (BCLK 26, WS 25, SD 33)",
+          "ส่งเสียงผ่าน I2S: 26, 25, 33",
         ],
         "arduino-stt": [
           "3 · ESP32 → หลังบ้าน",
-          "ESP32 ส่งเสียงที่อัดไว้ไปหลังบ้านทาง Wi-Fi (HTTP POST)",
+          "ส่ง WAV ผ่าน Wi-Fi ด้วย HTTP POST",
         ],
         "stt-arduino": [
           "4 · หลังบ้าน → ESP32",
-          "ตอบกลับเป็น JSON ว่าเปิดหรือปิดไฟ หรือไม่ต้องทำอะไร",
+          "ตอบ JSON: เปิด, ปิด หรือไม่ทำงาน",
         ],
         "arduino-relay": [
           "5 · ESP32 → รีเลย์",
-          "GPIO23 = LOW รีเลย์ทำงาน, HIGH รีเลย์ปล่อย",
+          "GPIO23 LOW = ทำงาน, HIGH = ปล่อย",
         ],
-        "arduino-lcd": ["ESP32 → จอ LCD", "สาย I2C: SDA GPIO18, SCL GPIO19"],
-        "arduino-led": ["ESP32 → LED สถานะ", "GPIO17 ผ่านตัวต้านทาน"],
+        "arduino-lcd": ["ESP32 → LCD", "SDA18, SCL19"],
+        "arduino-led": ["ESP32 → LED", "GPIO17 ผ่านตัวต้านทาน"],
         "ac-relay": [
           "แหล่งจ่าย DC → รีเลย์",
-          "ไฟจากแหล่งจ่ายเข้าขา COM ของรีเลย์",
+          "จ่ายไฟเข้า COM ของรีเลย์",
         ],
         "relay-lamp": [
           "6 · รีเลย์ → โหลด DC",
-          "ขา NO ต่อไปยังโหลด รีเลย์ทำงานเมื่อไหร่ โหลดติด",
+          "NO ต่อโหลด เมื่อรีเลย์ทำงานโหลดติด",
         ],
       };
 
@@ -1915,7 +2147,7 @@
       function handleCommand(text) {
         heard.textContent = "“" + text + "”";
         if (!/ตี๋/.test(text)) {
-          hint.textContent = "ขึ้นต้นด้วยคำปลุก “ตี๋” ก่อน เช่น “ตี๋ เปิดไฟ”";
+          hint.textContent = "เริ่มด้วย “ตี๋” เช่น “ตี๋ เปิดไฟ”";
           return;
         }
         text = text.split("ตี๋").pop();
@@ -1926,8 +2158,7 @@
           setLamp(false);
           hint.textContent = "ไฟดับแล้ว";
         } else {
-          hint.textContent =
-            "ไม่รู้จักคำสั่งนี้ ลองพูดว่า “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”";
+          hint.textContent = "ใช้ “ตี๋ เปิดไฟ” หรือ “ตี๋ ปิดไฟ”";
         }
       }
 
